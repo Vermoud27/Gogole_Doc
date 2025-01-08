@@ -33,11 +33,9 @@ public class TextEditorSwing extends JFrame {
 
             public void insertUpdate(DocumentEvent e) {
                 handleTextChange();
-                handleTextChange();
             }
 
             public void removeUpdate(DocumentEvent e) {
-                handleTextChange();
                 handleTextChange();
             }
 
@@ -49,7 +47,8 @@ public class TextEditorSwing extends JFrame {
                 int changePosition = findChangePosition(previousText, currentText);
                 String changeContent = findChangeContent(previousText, currentText);
 
-                if (changeContent != null) {
+                //System.out.println(changeContent);
+                //if (changeContent != null) {
                     String operationType = currentText.length() > previousText.length() ? "INSERT" : "DELETE";
                     TextOperation operation = new TextOperation( operationType, textArea.getCaretPosition(), textArea.getText(),//changeContent,
                             System.currentTimeMillis(), "Node-" + peerDiscovery.hashCode());
@@ -59,7 +58,7 @@ public class TextEditorSwing extends JFrame {
                     for (String peer : peerDiscovery.getPeers()) {
                         peerCommunication.sendMessage(operation.toString(), peer, 5000);
                     }
-                }
+                //}
 
                 previousText = currentText;
             }
