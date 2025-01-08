@@ -12,6 +12,7 @@ public class TextEditorSwing extends JFrame {
     private PeerDiscovery peerDiscovery;
     private PeerCommunication peerCommunication;
     private PriorityQueue<TextOperation> operationQueue;
+    private DocumentListener listener;
 
     public TextEditorSwing(PeerDiscovery peerDiscovery, PeerCommunication peerCommunication) {
         this.peerDiscovery = peerDiscovery;
@@ -27,17 +28,17 @@ public class TextEditorSwing extends JFrame {
         JScrollPane scrollPane = new JScrollPane(textArea);
 
         // Écoute des modifications locales
-        textArea.getDocument().addDocumentListener(new DocumentListener() {
+        listener = new DocumentListener() {
             private String previousText = "";
 
             public void insertUpdate(DocumentEvent e) {
                 handleTextChange();
-                //System.out.println("1");
+                System.out.println("1");
             }
 
             public void removeUpdate(DocumentEvent e) {
                 handleTextChange();
-                //System.out.println("2");
+                System.out.println("2");
             }
 
             public void changedUpdate(DocumentEvent e) {
@@ -64,7 +65,9 @@ public class TextEditorSwing extends JFrame {
 
                 previousText = currentText;
             }
-        });
+        };
+
+        textArea.getDocument().addDocumentListener(listener);
 
         add(scrollPane, BorderLayout.CENTER);
 
@@ -114,6 +117,7 @@ public class TextEditorSwing extends JFrame {
         SwingUtilities.invokeLater(() -> {
 
             try {
+                textArea.getDocument().removeDocumentListener(listener);
 
                 // Récupérer l'ancien texte avant modification
                 String oldText = textArea.getText();
@@ -148,6 +152,8 @@ public class TextEditorSwing extends JFrame {
                 }
                 
                 textArea.setCaretPosition(currentCaretPosition);
+
+                textArea.getDocument().addDocumentListener(listener);
 
             } catch (Exception e) {
                 e.printStackTrace();
