@@ -2,9 +2,16 @@ import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Comparator;
 import java.util.PriorityQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
 
 public class TextEditorSwing extends JFrame {
     private JTextArea textArea;
@@ -26,6 +33,15 @@ public class TextEditorSwing extends JFrame {
 
         textArea = new JTextArea();
         JScrollPane scrollPane = new JScrollPane(textArea);
+
+        // button exporter
+        JButton saveButton = new JButton("Exporter");
+        saveButton.setPreferredSize(new Dimension(150, 30));
+
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(saveButton);
+
+        this.exporter(saveButton);
 
         // Écoute des modifications locales
         listener = new DocumentListener() {
@@ -67,6 +83,7 @@ public class TextEditorSwing extends JFrame {
         textArea.getDocument().addDocumentListener(listener);
 
         add(scrollPane, BorderLayout.CENTER);
+        add(buttonPanel, BorderLayout.SOUTH);
 
         // Recevoir les modifications des pairs
         new Thread(() -> {
@@ -81,6 +98,31 @@ public class TextEditorSwing extends JFrame {
         }).start();
 
         setVisible(true);
+    }
+
+    private void exporter(JButton saveButton)
+    {
+        saveButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) 
+            {
+                JFileChooser fileChooser = new JFileChooser();
+                int choixUser = fileChooser.showSaveDialog(TextEditorSwing.this);
+
+                if (choixUser == JFileChooser.APPROVE_OPTION) {
+                    File fileToSave = fileChooser.getSelectedFile();
+                    try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileToSave))) {
+
+                        writer.write(textArea.getText());
+
+                        JOptionPane.showMessageDialog(TextEditorSwing.this, "Fichier sauvegardé");
+
+                    } catch (IOException ex) {
+                        JOptionPane.showMessageDialog(TextEditorSwing.this, "Erreur lors de la sauvegarde du fichier", "Erreur", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            }
+        });
     }
 
     private void processOperations() {
