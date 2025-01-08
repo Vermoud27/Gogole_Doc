@@ -109,51 +109,55 @@ public class TextEditorSwing extends JFrame {
 
     private void applyOperation(TextOperation operation) {
         SwingUtilities.invokeLater(() -> {
-
             try {
-
                 // Récupérer l'ancien texte avant modification
                 String oldText = textArea.getText();
-
+    
                 // Enregistrer la position actuelle du curseur
                 int currentCaretPosition = textArea.getCaretPosition();
     
+                // Position de l'opération
+                int operationPosition = operation.getPosition();
+    
                 // Appliquer l'opération reçue
-                if (operation.getOperationType().equals("INSERT") || operation.getOperationType().equals("DELETE")) {
-                    textArea.setText(operation.getContent());
+                if (operation.getOperationType().equals("INSERT")) {
+                    // Insérer le contenu à la position spécifiée
+                    String newText = oldText.substring(0, operationPosition) 
+                                   + operation.getContent() 
+                                   + oldText.substring(operationPosition);
+                    textArea.setText(newText);
+                } else if (operation.getOperationType().equals("DELETE")) {
+                    // Supprimer le contenu à la position spécifiée
+                    int deleteLength = operation.getContent().length();
+                    String newText = oldText.substring(0, operationPosition) 
+                                   + oldText.substring(operationPosition + deleteLength);
+                    textArea.setText(newText);
                 }
-
-                // Récupérer le nouveau texte après modification
-                String newText = textArea.getText();
-
-                // Ajuster la position du curseur si le texte a été modifié avant sa position actuelle
-                if (operation.getPosition() < currentCaretPosition) {
-                    int lengthDifference = newText.length() - oldText.length();
-
-                    if (operation.getOperationType().equals("INSERT"))
-                    {
-                        currentCaretPosition -= lengthDifference;
-                    } 
-                    else if (operation.getOperationType().equals("DELETE"))
-                    {
+    
+                // Ajuster la position du curseur uniquement si l'opération est avant sa position
+                if (operationPosition <= currentCaretPosition) {
+                    int lengthDifference = textArea.getText().length() - oldText.length();
+    
+                    if (operation.getOperationType().equals("INSERT")) {
+                        currentCaretPosition += lengthDifference;
+                    } else if (operation.getOperationType().equals("DELETE")) {
                         currentCaretPosition += lengthDifference;
                     }
                 }
     
-                // Restaurer la position du curseur si possible
+                // Restaurer la position du curseur ou la placer à la fin si nécessaire
                 if (currentCaretPosition <= textArea.getText().length()) {
                     textArea.setCaretPosition(currentCaretPosition);
                 } else {
-                    // Si la position dépasse la longueur du texte, placez le curseur à la fin
                     textArea.setCaretPosition(textArea.getText().length());
                 }
-
+    
             } catch (Exception e) {
                 e.printStackTrace();
             }
-
         });
     }
+    
     
 
      /*if (operation.getOperationType().equals("INSERT")) {
