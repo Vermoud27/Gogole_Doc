@@ -127,24 +127,24 @@ public class TextEditorSwing extends JFrame {
                 String newText = textArea.getText();
 
                 // Ajuster la position du curseur si le texte a été modifié avant sa position actuelle
-                if (operation.getPosition() <= currentCaretPosition) {
+                if (currentCaretPosition > operation.getPosition()) {
                     int lengthDifference = newText.length() - oldText.length();
 
-                    
                     currentCaretPosition += lengthDifference;
+                }
 
-                    System.out.println("OP " + operation.getPosition() + "  CUR " + currentCaretPosition + "  LEN " + lengthDifference);
-                    
+                // Test pos curseur
+                if (currentCaretPosition > textArea.getText().length()) 
+                {
+                    currentCaretPosition = textArea.getText().length();
+                }
+
+                if(currentCaretPosition < 0)
+                {
+                    currentCaretPosition = 0;
                 }
                 
-    
-                // Restaurer la position du curseur si possible
-                if (currentCaretPosition <= textArea.getText().length()) {
-                    textArea.setCaretPosition(currentCaretPosition);
-                } else {
-                    // Si la position dépasse la longueur du texte, placez le curseur à la fin
-                    textArea.setCaretPosition(textArea.getText().length());
-                }
+                textArea.setCaretPosition(currentCaretPosition);
 
             } catch (Exception e) {
                 e.printStackTrace();
