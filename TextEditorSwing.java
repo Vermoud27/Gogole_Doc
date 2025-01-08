@@ -33,17 +33,15 @@ public class TextEditorSwing extends JFrame {
 
             public void insertUpdate(DocumentEvent e) {
                 handleTextChange();
-                System.out.println("1");
+                handleTextChange();
             }
 
             public void removeUpdate(DocumentEvent e) {
                 handleTextChange();
-                System.out.println("2");
+                handleTextChange();
             }
 
             public void changedUpdate(DocumentEvent e) {
-                //handleTextChange();
-                //System.out.println("3");
             }
 
             private void handleTextChange() {
