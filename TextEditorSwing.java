@@ -49,7 +49,7 @@ public class TextEditorSwing extends JFrame {
 
                 if (changeContent != null) {
                     String operationType = currentText.length() > previousText.length() ? "INSERT" : "DELETE";
-                    TextOperation operation = new TextOperation( operationType, changePosition, textArea.getText(),//changeContent,
+                    TextOperation operation = new TextOperation( operationType, textArea.getCaretPosition(), textArea.getText(),//changeContent,
                             System.currentTimeMillis(), "Node-" + peerDiscovery.hashCode());
                     operationLog.add(operation);
 
@@ -59,7 +59,7 @@ public class TextEditorSwing extends JFrame {
                     }
                 }
 
-                //previousText = currentText;
+                previousText = currentText;
             }
         });
 
@@ -132,7 +132,7 @@ public class TextEditorSwing extends JFrame {
 
                     
                     currentCaretPosition += lengthDifference;
-                    
+
                     System.out.println("OP " + operation.getPosition() + "  CUR " + currentCaretPosition + "  LEN " + lengthDifference);
                     
                 }
