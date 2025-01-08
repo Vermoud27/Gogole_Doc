@@ -49,7 +49,7 @@ public class TextEditorSwing extends JFrame {
 
                 if (changeContent != null) {
                     String operationType = currentText.length() > previousText.length() ? "INSERT" : "DELETE";
-                    TextOperation operation = new TextOperation( "INSERT" /*operationType*/, changePosition, textArea.getText(),//changeContent,
+                    TextOperation operation = new TextOperation( operationType, changePosition, textArea.getText(),//changeContent,
                             System.currentTimeMillis(), "Node-" + peerDiscovery.hashCode());
                     operationLog.add(operation);
 
@@ -129,7 +129,15 @@ public class TextEditorSwing extends JFrame {
                 // Ajuster la position du curseur si le texte a été modifié avant sa position actuelle
                 if (operation.getPosition() < currentCaretPosition) {
                     int lengthDifference = newText.length() - oldText.length();
-                    currentCaretPosition += lengthDifference;
+
+                    if (operation.getOperationType().equals("INSERT"))
+                    {
+                        currentCaretPosition -= lengthDifference;
+                    } 
+                    else if (operation.getOperationType().equals("DELETE"))
+                    {
+                        currentCaretPosition += lengthDifference;
+                    }
                 }
     
                 // Restaurer la position du curseur si possible
