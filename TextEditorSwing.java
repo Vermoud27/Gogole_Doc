@@ -49,7 +49,7 @@ public class TextEditorSwing extends JFrame {
 
                 if (changeContent != null) {
                     String operationType = currentText.length() > previousText.length() ? "INSERT" : "DELETE";
-                    TextOperation operation = new TextOperation(operationType, changePosition, changeContent,
+                    TextOperation operation = new TextOperation(operationType, changePosition, textArea.getText(),//changeContent,
                             System.currentTimeMillis(), "Node-" + peerDiscovery.hashCode());
                     operationLog.add(operation);
 
@@ -110,7 +110,7 @@ public class TextEditorSwing extends JFrame {
     private void applyOperation(TextOperation operation) {
         SwingUtilities.invokeLater(() -> {
             try {
-                if (operation.getOperationType().equals("INSERT")) {
+                /*if (operation.getOperationType().equals("INSERT")) {
                     textArea.insert(operation.getContent(), operation.getPosition());
                 } else if (operation.getOperationType().equals("DELETE")) {
                     int start = operation.getPosition();
@@ -121,7 +121,8 @@ public class TextEditorSwing extends JFrame {
                     } else {
                         System.err.println("Invalid DELETE operation: " + operation);
                     }
-                }
+                }*/
+                textArea.setText(operation.getContent());
             } catch (Exception e) {
                 e.printStackTrace();
             }
