@@ -113,20 +113,46 @@ public class TextEditorSwing extends JFrame {
                 // Enregistrer la position actuelle du curseur
                 int currentCaretPosition = textArea.getCaretPosition();
     
+                // Récupérer l'ancien texte avant modification
+                String oldText = textArea.getText();
+    
                 // Appliquer l'opération reçue
-                if (operation.getOperationType().equals("INSERT") || operation.getOperationType().equals("DELETE")) {
-                    textArea.setText(operation.getContent());
+                if (operation.getOperationType().equals("INSERT")) {
+                    textArea.insert(operation.getContent(), operation.getPosition());
+                } else if (operation.getOperationType().equals("DELETE")) {
+                    int start = operation.getPosition();
+                    int end = start + operation.getContent().length();
+                    if (start >= 0 && end <= textArea.getDocument().getLength()) {
+                        textArea.getDocument().remove(start, operation.getContent().length());
+                    }
                 }
     
-                // Restaurer la position du curseur si possible
-                if (currentCaretPosition <= textArea.getText().length()) {
-                    textArea.setCaretPosition(currentCaretPosition);
-                } else {
-                    // Si la position dépasse la longueur du texte, placez le curseur à la fin
-                    textArea.setCaretPosition(textArea.getText().length());
+                // Récupérer le nouveau texte après modification
+                String newText = textArea.getText();
+    
+                // Ajuster la position du curseur si le texte a été modifié avant sa position actuelle
+                if (operation.getPosition() < currentCaretPosition) {
+                    int lengthDifference = newText.length() - oldText.length();
+                    currentCaretPosition += lengthDifference;
                 }
+    
+                // S'assurer que la nouvelle position est valide
+                if (currentCaretPosition < 0) {
+                    currentCaretPosition = 0;
+                } else if (currentCaretPosition > newText.length()) {
+                    currentCaretPosition = newText.length();
+                }
+    
+                // Restaurer la position ajustée du curseur
+                textArea.setCaretPosition(currentCaretPosition);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+    }
+    
 
-                 /*if (operation.getOperationType().equals("INSERT")) {
+     /*if (operation.getOperationType().equals("INSERT")) {
                     textArea.insert(operation.getContent(), operation.getPosition());
                 } else if (operation.getOperationType().equals("DELETE")) {
                     int start = operation.getPosition();
@@ -138,10 +164,5 @@ public class TextEditorSwing extends JFrame {
                         System.err.println("Invalid DELETE operation: " + operation);
                     }
                 }*/
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
-    }
     
 }
