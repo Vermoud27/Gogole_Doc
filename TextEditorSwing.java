@@ -110,6 +110,12 @@ public class TextEditorSwing extends JFrame {
     private void applyOperation(TextOperation operation) {
         SwingUtilities.invokeLater(() -> {
             try {
+                if (operation.getOperationType().equals("INSERT") || operation.getOperationType().equals("DELETE"))
+                {
+                    textArea.setText(operation.getContent());
+                } 
+
+
                 /*if (operation.getOperationType().equals("INSERT")) {
                     textArea.insert(operation.getContent(), operation.getPosition());
                 } else if (operation.getOperationType().equals("DELETE")) {
@@ -122,7 +128,7 @@ public class TextEditorSwing extends JFrame {
                         System.err.println("Invalid DELETE operation: " + operation);
                     }
                 }*/
-                textArea.setText(operation.getContent());
+                
             } catch (Exception e) {
                 e.printStackTrace();
             }
