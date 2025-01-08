@@ -64,7 +64,7 @@ public class TextEditorSwing extends JFrame {
                 String changeContent = findChangeContent(previousText, currentText);
 
                 //System.out.println(changeContent);
-                //if (changeContent != null) {
+                if (changeContent != null) {
                     String operationType = currentText.length() > previousText.length() ? "INSERT" : "DELETE";
                     TextOperation operation = new TextOperation( operationType, textArea.getCaretPosition(), textArea.getText(),//changeContent,
                             System.currentTimeMillis(), "Node-" + peerDiscovery.hashCode());
@@ -74,7 +74,7 @@ public class TextEditorSwing extends JFrame {
                     for (String peer : peerDiscovery.getPeers()) {
                         peerCommunication.sendMessage(operation.toString(), peer, 5000);
                     }
-                //}
+                }
 
                 previousText = currentText;
             }

@@ -10,7 +10,7 @@ public class Main {
         // Démarrer la découverte des pairs et la communication
         peerDiscovery.startListening();
         peerDiscovery.startBroadcastingHello();
-        peerCommunication.startListening();
+        //peerCommunication.startListening();
 
         // Gestion des pairs détectés (éviter le flood)
         new Thread(() -> {

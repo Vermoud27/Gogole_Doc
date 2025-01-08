@@ -36,7 +36,7 @@ public class PeerCommunication {
         return addresses;
     }
 
-    public void startListening() {
+    /*public void startListening() {
         new Thread(() -> {
             System.out.println("Listening for messages on port " + port + "...");
             while (true) {
@@ -58,7 +58,7 @@ public class PeerCommunication {
                 }
             }
         }).start();
-    }
+    }*/
 
     public String receiveMessage() {
         try {
@@ -67,7 +67,10 @@ public class PeerCommunication {
             socket.receive(packet);
 
             String senderAddress = packet.getAddress().getHostAddress();
+            String message = new String(packet.getData(), 0, packet.getLength());
+            
             if (!localAddresses.contains(senderAddress)) {
+                System.out.println("Received message: " + message + " from " + senderAddress);
                 return new String(packet.getData(), 0, packet.getLength());
             }
         } catch (IOException e) {
