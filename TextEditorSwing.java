@@ -7,7 +7,6 @@ import java.io.*;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.Comparator;
 
 public class TextEditorSwing extends JFrame {
     private JTabbedPane tabbedPane;
@@ -15,7 +14,7 @@ public class TextEditorSwing extends JFrame {
     private PeerDiscovery peerDiscovery;
     private PeerCommunication peerCommunication;
     private PriorityQueue<TextOperation> operationQueue;
-    
+
     // Liste pour les utilisateurs connectés et leurs adresses IP
     private DefaultListModel<String> connectedUsersListModel = new DefaultListModel<>();
     private JList<String> connectedUsersList = new JList<>(connectedUsersListModel);
@@ -32,8 +31,12 @@ public class TextEditorSwing extends JFrame {
 
         tabbedPane = new JTabbedPane();
 
+        openExistingFiles();
+
         // Ajout d'un premier onglet par défaut
-        addNewTab("Nouveau fichier");
+        if (tabbedPane.getTabCount() == 0) {
+            addNewTab("Nouveau fichier");
+        }
 
         // Création des boutons
         JButton newTabButton = new JButton("Nouvel onglet");
@@ -77,9 +80,9 @@ public class TextEditorSwing extends JFrame {
         // Traitement de la découverte de nouveaux pairs
         new Thread(() -> {
             while (true) {
-                Set<String> peersSet = peerDiscovery.getPeers();  // Cela renvoie un Set<String>
-                List<String> peersList = new ArrayList<>(peersSet);  // Convertir en List<String>
-                updateConnectedUsers(peersList);  // Passer la liste au lieu du Set
+                Set<String> peersSet = peerDiscovery.getPeers(); // Cela renvoie un Set<String>
+                List<String> peersList = new ArrayList<>(peersSet); // Convertir en List<String>
+                updateConnectedUsers(peersList); // Passer la liste au lieu du Set
                 try {
                     Thread.sleep(1000); // Pause de 1 seconde entre chaque mise à jour
                 } catch (InterruptedException e) {
@@ -107,11 +110,60 @@ public class TextEditorSwing extends JFrame {
         });
     }
 
-    private void addNewTab(String title) {
-        JTextArea textArea = new JTextArea();
+    private void openExistingFiles() {
+        try {
+            // Création du dossier "file" s'il n'existe pas
+            File currentDirectory = new File(".");
+            File folder = new File(currentDirectory.getCanonicalFile(), "file");
+            if (!folder.exists()) {
+                folder.mkdir();
+            }
+
+            // Lister tous les fichiers ".txt" dans le dossier "file"
+            File[] files = folder.listFiles((dir, name) -> name.endsWith(".txt"));
+
+            if (files != null) {
+                for (File file : files) {
+                    // Lire le contenu du fichier
+                    String fileContent = readFile(file);
+
+                    // Générer le nom de l'onglet à partir du nom du fichier
+                    String fileName = file.getName().replace(".txt", "");
+
+                    // Créer un nouvel onglet avec le contenu du fichier
+                    addTabWithContent(fileName, fileContent);
+                }
+            }
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "Erreur lors de l'ouverture des fichiers.", "Erreur",
+                    JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
+
+    private String readFile(File file) {
+        StringBuilder content = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                content.append(line).append("\n");
+            }
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "Erreur lors de la lecture du fichier : " + file.getName(), "Erreur",
+                    JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+        return content.toString();
+    }
+
+    private void addTabWithContent(String title, String content) {
+        JTextArea textArea = new JTextArea(content);
         JScrollPane scrollPane = new JScrollPane(textArea);
 
-        // Ajout d'un DocumentListener pour chaque onglet
+        // Ajouter l'onglet avec le titre et le contenu
+        tabbedPane.addTab(title, scrollPane);
+
+        // Ajout d'un DocumentListener pour détecter les modifications
         DocumentListener listener = new DocumentListener() {
             private String previousText = "";
 
@@ -123,7 +175,8 @@ public class TextEditorSwing extends JFrame {
                 handleTextChange();
             }
 
-            public void changedUpdate(DocumentEvent e) {}
+            public void changedUpdate(DocumentEvent e) {
+            }
 
             private void handleTextChange() {
                 String currentText = textArea.getText();
@@ -132,7 +185,8 @@ public class TextEditorSwing extends JFrame {
 
                 if (changeContent != null) {
                     String operationType = currentText.length() > previousText.length() ? "INSERT" : "DELETE";
-                    TextOperation operation = new TextOperation(operationType, textArea.getCaretPosition(), textArea.getText(),
+                    TextOperation operation = new TextOperation(operationType, textArea.getCaretPosition(),
+                            textArea.getText(),
                             System.currentTimeMillis(), "Node-" + peerDiscovery.hashCode());
                     operationLog.add(operation);
 
@@ -147,7 +201,6 @@ public class TextEditorSwing extends JFrame {
         };
 
         textArea.getDocument().addDocumentListener(listener);
-        tabbedPane.addTab(title, scrollPane);
 
         // Menu contextuel pour l'onglet
         JPopupMenu contextMenu = new JPopupMenu();
@@ -175,12 +228,131 @@ public class TextEditorSwing extends JFrame {
         });
     }
 
+    private int fileCounter = 1; // Compteur global pour les fichiers
+
+    private void addNewTab(String baseTitle) {
+        JTextArea textArea = new JTextArea();
+        JScrollPane scrollPane = new JScrollPane(textArea);
+
+        try {
+            // Création du dossier "file" s'il n'existe pas
+            File currentDirectory = new File(".");
+            File folder = new File(currentDirectory.getCanonicalFile(), "file");
+            if (!folder.exists()) {
+                folder.mkdir();
+            }
+
+            // Génération du nom de fichier et de l'onglet
+            String fileName;
+            do {
+                fileName = baseTitle + " (" + fileCounter + ")";
+                fileCounter++;
+            } while (new File(folder, fileName + ".txt").exists());
+
+            // Créer le fichier
+            File newFile = new File(folder, fileName + ".txt");
+            if (newFile.createNewFile()) {
+                System.out.println("Fichier créé : " + newFile.getAbsolutePath());
+            } else {
+                System.out.println("Erreur : le fichier n'a pas pu être créé.");
+            }
+
+            // Ajout de l'onglet avec le nom
+            tabbedPane.addTab(fileName, scrollPane);
+
+            // DocumentListener pour détecter les modifications
+            DocumentListener listener = new DocumentListener() {
+                private String previousText = "";
+
+                public void insertUpdate(DocumentEvent e) {
+                    handleTextChange();
+                }
+
+                public void removeUpdate(DocumentEvent e) {
+                    handleTextChange();
+                }
+
+                public void changedUpdate(DocumentEvent e) {
+                }
+
+                private void handleTextChange() {
+                    String currentText = textArea.getText();
+                    int changePosition = findChangePosition(previousText, currentText);
+                    String changeContent = findChangeContent(previousText, currentText);
+
+                    if (changeContent != null) {
+                        String operationType = currentText.length() > previousText.length() ? "INSERT" : "DELETE";
+                        TextOperation operation = new TextOperation(operationType, textArea.getCaretPosition(),
+                                textArea.getText(),
+                                System.currentTimeMillis(), "Node-" + peerDiscovery.hashCode());
+                        operationLog.add(operation);
+
+                        // Diffuser l'opération aux autres pairs
+                        for (String peer : peerDiscovery.getPeers()) {
+                            peerCommunication.sendMessage(operation.toString(), peer, 5000);
+                        }
+                    }
+
+                    previousText = currentText;
+                }
+            };
+
+            textArea.getDocument().addDocumentListener(listener);
+
+            // Menu contextuel pour l'onglet
+            JPopupMenu contextMenu = new JPopupMenu();
+
+            JMenuItem renameTabItem = new JMenuItem("Renommer l'onglet");
+            renameTabItem.addActionListener(e -> renameTab(tabbedPane.getSelectedIndex()));
+
+            JMenuItem changeColorItem = new JMenuItem("Changer la couleur");
+            changeColorItem.addActionListener(e -> changeTabBackground(tabbedPane.getSelectedIndex()));
+
+            contextMenu.add(renameTabItem);
+            contextMenu.add(changeColorItem);
+
+            // Ajout du menu contextuel et gestion du clic droit/double clic
+            tabbedPane.addMouseListener(new MouseAdapter() {
+                public void mousePressed(MouseEvent evt) {
+                    if (SwingUtilities.isRightMouseButton(evt) || evt.getClickCount() == 2) {
+                        int tabIndex = tabbedPane.indexAtLocation(evt.getX(), evt.getY());
+                        if (tabIndex != -1) {
+                            tabbedPane.setSelectedIndex(tabIndex); // Sélectionner l'onglet cliqué
+                            contextMenu.show(tabbedPane, evt.getX(), evt.getY());
+                        }
+                    }
+                }
+            });
+
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "Erreur lors de la création du fichier.", "Erreur",
+                    JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
+
     private void renameTab(int tabIndex) {
         if (tabIndex != -1) {
-            String newName = JOptionPane.showInputDialog(this, "Entrez un nouveau nom pour l'onglet:", 
-                    tabbedPane.getTitleAt(tabIndex));
+            String oldFileName = tabbedPane.getTitleAt(tabIndex); // Ancien nom de l'onglet
+            String newName = JOptionPane.showInputDialog(this, "Entrez un nouveau nom pour l'onglet:", oldFileName);
+
             if (newName != null && !newName.trim().isEmpty()) {
+                // Changer le titre de l'onglet
                 tabbedPane.setTitleAt(tabIndex, newName);
+
+                // Récupérer le fichier correspondant à l'ancien nom
+                File oldFile = new File("file", oldFileName + ".txt");
+                File newFile = new File("file", newName + ".txt");
+
+                // Renommer le fichier si nécessaire
+                if (oldFile.exists()) {
+                    if (oldFile.renameTo(newFile)) {
+                        System.out.println("Le fichier a été renommé avec succès.");
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Erreur lors du renommage du fichier.", "Erreur",
+                                JOptionPane.ERROR_MESSAGE);
+                    }
+                }
             }
         }
     }
@@ -194,7 +366,7 @@ public class TextEditorSwing extends JFrame {
                 tabbedPane.setBackgroundAt(tabIndex, newColor);
             }
         }
-    }    
+    }
 
     private void exporter(JButton saveButton) {
         saveButton.addActionListener(e -> {
@@ -203,17 +375,20 @@ public class TextEditorSwing extends JFrame {
                 JScrollPane selectedScrollPane = (JScrollPane) tabbedPane.getComponentAt(selectedTabIndex);
                 JTextArea textArea = (JTextArea) selectedScrollPane.getViewport().getView();
 
-                JFileChooser fileChooser = new JFileChooser();
-                int choixUser = fileChooser.showSaveDialog(TextEditorSwing.this);
+                // Récupérer le nom du fichier associé à l'onglet actuel
+                String fileName = tabbedPane.getTitleAt(selectedTabIndex);
 
-                if (choixUser == JFileChooser.APPROVE_OPTION) {
-                    File fileToSave = fileChooser.getSelectedFile();
-                    try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileToSave))) {
-                        writer.write(textArea.getText());
-                        JOptionPane.showMessageDialog(TextEditorSwing.this, "Fichier sauvegardé");
-                    } catch (IOException ex) {
-                        JOptionPane.showMessageDialog(TextEditorSwing.this, "Erreur lors de la sauvegarde du fichier", "Erreur", JOptionPane.ERROR_MESSAGE);
-                    }
+                // Vérifier si un fichier est déjà associé
+                File fileToSave = new File("file", fileName + ".txt");
+
+                // Sauvegarder le contenu du fichier sans ouvrir un JFileChooser
+                try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileToSave))) {
+                    writer.write(textArea.getText());
+                    JOptionPane.showMessageDialog(TextEditorSwing.this,
+                            "Fichier sauvegardé dans " + fileToSave.getAbsolutePath());
+                } catch (IOException ex) {
+                    JOptionPane.showMessageDialog(TextEditorSwing.this, "Erreur lors de la sauvegarde du fichier",
+                            "Erreur", JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
@@ -257,7 +432,8 @@ public class TextEditorSwing extends JFrame {
                     String oldText = textArea.getText();
                     int currentCaretPosition = textArea.getCaretPosition();
 
-                    if (operation.getOperationType().equals("INSERT") || operation.getOperationType().equals("DELETE")) {
+                    if (operation.getOperationType().equals("INSERT")
+                            || operation.getOperationType().equals("DELETE")) {
                         textArea.setText(operation.getContent());
                     }
 
