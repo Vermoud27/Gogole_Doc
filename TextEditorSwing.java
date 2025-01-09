@@ -7,6 +7,8 @@ import java.io.*;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.Comparator;
+import java.io.BufferedReader;
 
 public class TextEditorSwing extends JFrame {
     private JTabbedPane tabbedPane;
@@ -40,7 +42,7 @@ public class TextEditorSwing extends JFrame {
 
         // Création des boutons
         JButton newTabButton = new JButton("Nouvel onglet");
-        JButton saveButton = new JButton("Exporter");
+        JButton saveButton = new JButton("Sauvegarder");
         newTabButton.setPreferredSize(new Dimension(150, 30));
         saveButton.setPreferredSize(new Dimension(150, 30));
 
@@ -52,7 +54,7 @@ public class TextEditorSwing extends JFrame {
 
         // Ajout des actions aux boutons
         newTabButton.addActionListener(e -> addNewTab("Nouveau fichier"));
-        exporter(saveButton);
+        sauvegarder(saveButton);
 
         // Panel gauche pour afficher les utilisateurs connectés
         JPanel leftPanel = new JPanel();
@@ -368,7 +370,7 @@ public class TextEditorSwing extends JFrame {
         }
     }
 
-    private void exporter(JButton saveButton) {
+    private void sauvegarder(JButton saveButton) {
         saveButton.addActionListener(e -> {
             int selectedTabIndex = tabbedPane.getSelectedIndex();
             if (selectedTabIndex != -1) {
