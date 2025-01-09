@@ -59,6 +59,9 @@ public class PeerCommunication {
                     {
                         TextOperation operation = TextOperation.fromString(message);
 
+                        System.out.println("Received message: " + message + " from " + senderAddress);
+
+
                         if(operation.getOperationType().equals("MODIFIER"))
                         {
                             //Modifier le fichier avce le nouveau message
@@ -79,13 +82,14 @@ public class PeerCommunication {
                             TextOperation operationEnvoi = new TextOperation( "MODIFIER", operation.getFichier(), 0, fusion, System.currentTimeMillis(), "Node-?" );
                         
                             this.ihm.envoyerMessage(operationEnvoi);
+
+                            System.out.println(fusion);
                         }
 
                         //
                         //Récupérer ou envoiyer des fichiers aux autres
                         //
                         
-                        System.out.println("Received message: " + message + " from " + senderAddress);
                         
                     }
                 } catch (IOException e) {

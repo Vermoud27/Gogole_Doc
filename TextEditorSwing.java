@@ -90,12 +90,18 @@ public class TextEditorSwing extends JFrame {
         //envoi de la demande de fusion des fichiers
 
 
+        //Attendre que les connexions se trouvent
+        try {
+            Thread.sleep(3000);
+        } catch (Exception e) {}
+
         TextOperation operation = new TextOperation("FUSION", SAVE_FILE_PATH, 0, this.textArea.getText(), System.currentTimeMillis(), "Node-" + peerDiscovery.hashCode());
         
         for (String peer : peerDiscovery.getPeers())
         {
             peerCommunication.sendMessage(operation.toString(), peer, 5000);
-            break; //envoi seulement au 1er
+            
+            //break; //envoi seulement au 1er
         }
 
         setVisible(true);
