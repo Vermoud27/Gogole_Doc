@@ -15,7 +15,7 @@ public class TextEditorSwing extends JFrame {
     private PriorityQueue<TextOperation> operationQueue;
     private DocumentListener listener;
 
-    private static final String SAVE_FILE_PATH = "/DOC/document.txt"; // Chemin du fichier sauvegardé
+    private static final String SAVE_FILE_PATH = "document.txt"; // Chemin du fichier sauvegardé
 
     public TextEditorSwing(PeerDiscovery peerDiscovery, PeerCommunication peerCommunication) {
         this.peerDiscovery = peerDiscovery;
@@ -89,7 +89,7 @@ public class TextEditorSwing extends JFrame {
         //Demander les fichiers
         //envoi de la demande de fusion des fichiers
 
-        
+
         TextOperation operation = new TextOperation("FUSION", SAVE_FILE_PATH, 0, this.textArea.getText(), System.currentTimeMillis(), "Node-" + peerDiscovery.hashCode());
         
         for (String peer : peerDiscovery.getPeers())
