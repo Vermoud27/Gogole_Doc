@@ -2,6 +2,7 @@ import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
+import java.io.IOException;
 import java.util.Comparator;
 import java.util.PriorityQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -13,6 +14,8 @@ public class TextEditorSwing extends JFrame {
     private PeerCommunication peerCommunication;
     private PriorityQueue<TextOperation> operationQueue;
     private DocumentListener listener;
+
+    private static final String SAVE_FILE_PATH = "/DOC/document.txt"; // Chemin du fichier sauvegardé
 
     public TextEditorSwing(PeerDiscovery peerDiscovery, PeerCommunication peerCommunication) {
         this.peerDiscovery = peerDiscovery;
@@ -26,6 +29,14 @@ public class TextEditorSwing extends JFrame {
 
         textArea = new JTextArea();
         JScrollPane scrollPane = new JScrollPane(textArea);
+
+        // Charger le contenu sauvegardé au démarrage
+        try {
+            String savedContent = FileManager.loadFromFile(SAVE_FILE_PATH);
+            textArea.setText(savedContent); // Définir le texte chargé dans l'éditeur
+        } catch (IOException e) {
+            System.err.println("Erreur lors du chargement du fichier : " + e.getMessage());
+        }
 
         // Écoute des modifications locales
         listener = new DocumentListener() {
@@ -55,6 +66,14 @@ public class TextEditorSwing extends JFrame {
                 }
 
                 previousText = currentText;
+
+                try {
+                    FileManager.saveToFile(currentText, SAVE_FILE_PATH);
+                } catch (IOException e) {
+                    System.err.println("Erreur lors de la sauvegarde : " + e.getMessage());
+                }
+            
+                previousText = currentText;
             }
         };
 
@@ -62,20 +81,22 @@ public class TextEditorSwing extends JFrame {
 
         add(scrollPane, BorderLayout.CENTER);
 
-        // Recevoir les modifications des pairs
-        /*new Thread(() -> {
-            while (true) {
-                String receivedMessage = peerCommunication.receiveMessage();
-                if (receivedMessage != null) {
-                    TextOperation operation = TextOperation.fromString(receivedMessage);
-                    operationQueue.add(operation);
-                    processOperations();
-                }
-            }
-        }).start();*/
-
         //permet la reception des messages
         peerCommunication.setIHM(this);
+
+        
+        //Vérifier les fichiers 
+        //Demander les fichiers
+        //envoi de la demande de fusion des fichiers
+
+        
+        TextOperation operation = new TextOperation("FUSION", SAVE_FILE_PATH, 0, this.textArea.getText(), System.currentTimeMillis(), "Node-" + peerDiscovery.hashCode());
+        
+        for (String peer : peerDiscovery.getPeers())
+        {
+            peerCommunication.sendMessage(operation.toString(), peer, 5000);
+            break; //envoi seulement au 1er
+        }
 
         setVisible(true);
     }
