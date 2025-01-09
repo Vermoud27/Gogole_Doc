@@ -1,3 +1,6 @@
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.*;
 import java.util.Enumeration;
@@ -44,7 +47,7 @@ public class PeerCommunication {
             while (true) 
             {
                 try {
-                    byte[] buffer = new byte[1024];
+                    byte[] buffer = new byte[10000000];
                     DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                     socket.receive(packet);
 
@@ -67,11 +70,20 @@ public class PeerCommunication {
 
                         if(operation.getOperationType().equals("FUSION"))
                         {
+                            String text = this.getFichier(operation.getFichier());
+                            
                             //fusion des fichiers
+                            String fusion = DiffMerger.mergeStrings(operation.getContent(), text);
 
                             //Envoi du fichiers fusion aux autres
-                        }
+                            TextOperation operationEnvoi = new TextOperation( "MODIFIER", operation.getFichier(), 0, fusion, System.currentTimeMillis(), "Node-?" );
                         
+                            this.ihm.envoyerMessage(operationEnvoi);
+                        }
+
+                        //
+                        //Récupérer ou envoiyer des fichiers aux autres
+                        //
                         
                         System.out.println("Received message: " + message + " from " + senderAddress);
                         
@@ -83,7 +95,23 @@ public class PeerCommunication {
         }).start();
     }
 
-    public String receiveMessage() {
+    public String getFichier(String filePath) throws IOException
+    {
+        String text = "";
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+
+            String line; 
+            while ((line = reader.readLine()) != null) 
+            {
+                text += line + "\n";
+            }
+        }
+
+        return text;
+    }
+
+    /*public String receiveMessage() {
         try {
             byte[] buffer = new byte[1024];
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
@@ -100,7 +128,7 @@ public class PeerCommunication {
             e.printStackTrace();
         }
         return null;
-    }
+    }*/
 
     public void sendMessage(String message, String ipAddress, int targetPort) {
         new Thread(() -> {

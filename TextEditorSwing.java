@@ -51,10 +51,7 @@ public class TextEditorSwing extends JFrame {
                             System.currentTimeMillis(), "Node-" + peerDiscovery.hashCode());
                     operationLog.add(operation);
 
-                    // Diffuser l'opération aux autres pairs
-                    for (String peer : peerDiscovery.getPeers()) {
-                        peerCommunication.sendMessage(operation.toString(), peer, 5000);
-                    }
+                    envoyerMessage(operation);
                 }
 
                 previousText = currentText;
@@ -81,6 +78,14 @@ public class TextEditorSwing extends JFrame {
         peerCommunication.setIHM(this);
 
         setVisible(true);
+    }
+
+    public void envoyerMessage(TextOperation operation)
+    {
+        // Diffuser l'opération aux autres pairs
+        for (String peer : peerDiscovery.getPeers()) {
+            peerCommunication.sendMessage(operation.toString(), peer, 5000);
+        }
     }
 
     public void recevoirMessage(String message)
@@ -133,9 +138,7 @@ public class TextEditorSwing extends JFrame {
                 int currentCaretPosition = textArea.getCaretPosition();
     
                 // Appliquer l'opération reçue
-                if (operation.getOperationType().equals("INSERT") || operation.getOperationType().equals("DELETE")) {
-                    textArea.setText(operation.getContent());
-                }
+                textArea.setText(operation.getContent());
 
                 // Récupérer le nouveau texte après modification
                 String newText = textArea.getText();
@@ -168,19 +171,5 @@ public class TextEditorSwing extends JFrame {
 
         });
     }
-    
-
-     /*if (operation.getOperationType().equals("INSERT")) {
-                    textArea.insert(operation.getContent(), operation.getPosition());
-                } else if (operation.getOperationType().equals("DELETE")) {
-                    int start = operation.getPosition();
-                    int end = start + operation.getContent().length();
-
-                    if (start >= 0 && end <= textArea.getDocument().getLength()) {
-                        textArea.getDocument().remove(start, operation.getContent().length());
-                    } else {
-                        System.err.println("Invalid DELETE operation: " + operation);
-                    }
-                }*/
     
 }
