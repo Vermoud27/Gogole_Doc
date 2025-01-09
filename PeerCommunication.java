@@ -82,6 +82,7 @@ public class PeerCommunication {
                             TextOperation operationEnvoi = new TextOperation( "MODIFIER", operation.getFichier(), 0, fusion, System.currentTimeMillis(), "Node-?" );
                         
                             this.ihm.envoyerMessage(operationEnvoi);
+                            this.ihm.recevoirMessage(fusion);
 
                             System.out.println(fusion);
                         }
