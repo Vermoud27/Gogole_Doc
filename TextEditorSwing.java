@@ -7,6 +7,7 @@ import java.io.*;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.Comparator;
 
 public class TextEditorSwing extends JFrame {
     private JTabbedPane tabbedPane;
