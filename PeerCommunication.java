@@ -8,6 +8,7 @@ public class PeerCommunication {
     private final int port;
     private DatagramSocket socket;
     private Set<String> localAddresses;
+    private TextEditorSwing ihm;
 
     public PeerCommunication(int port) {
         this.port = port;
@@ -36,10 +37,12 @@ public class PeerCommunication {
         return addresses;
     }
 
-    /*public void startListening() {
-        new Thread(() -> {
+    public void startListening() {
+        new Thread(() -> 
+        {
             System.out.println("Listening for messages on port " + port + "...");
-            while (true) {
+            while (true) 
+            {
                 try {
                     byte[] buffer = new byte[1024];
                     DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
@@ -49,16 +52,36 @@ public class PeerCommunication {
                     String message = new String(packet.getData(), 0, packet.getLength());
 
                     // Ignorer les messages provenant des adresses locales
-                    if (!localAddresses.contains(senderAddress)) {
+                    if (!localAddresses.contains(senderAddress)) 
+                    {
+                        TextOperation operation = TextOperation.fromString(message);
+
+                        if(operation.getOperationType().equals("MODIFIER"))
+                        {
+                            //Modifier le fichier avce le nouveau message
+                            //Modifier le textArea si on est dessus
+
+                            //envoi dy message à l'ihm
+                            this.ihm.recevoirMessage(message);
+                        }
+
+                        if(operation.getOperationType().equals("FUSION"))
+                        {
+                            //fusion des fichiers
+
+                            //Envoi du fichiers fusion aux autres
+                        }
+                        
+                        
                         System.out.println("Received message: " + message + " from " + senderAddress);
-                        // Traitez le message ici si nécessaire
+                        
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
         }).start();
-    }*/
+    }
 
     public String receiveMessage() {
         try {
@@ -92,5 +115,10 @@ public class PeerCommunication {
                 e.printStackTrace();
             }
         }).start();
+    }
+
+    public void setIHM(TextEditorSwing ihm)
+    {
+        this.ihm = ihm;
     }
 }
