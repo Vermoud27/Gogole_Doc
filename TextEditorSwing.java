@@ -192,7 +192,7 @@ public class TextEditorSwing extends JFrame {
 
                 textArea.getDocument().addDocumentListener(listener);
 
-                System.out.println("FICHIER MODIFIER AVEC " + operation.getContent());
+                //System.out.println("FICHIER MODIFIER AVEC " + operation.getContent());
 
             } catch (Exception e) {
                 e.printStackTrace();
