@@ -118,25 +118,6 @@ public class PeerCommunication {
         return text;
     }
 
-    /*public String receiveMessage() {
-        try {
-            byte[] buffer = new byte[1024];
-            DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-            socket.receive(packet);
-
-            String senderAddress = packet.getAddress().getHostAddress();
-            String message = new String(packet.getData(), 0, packet.getLength());
-            
-            if (!localAddresses.contains(senderAddress)) {
-                System.out.println("Received message: " + message + " from " + senderAddress);
-                return new String(packet.getData(), 0, packet.getLength());
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }*/
-
     public void sendMessage(String message, String ipAddress, int targetPort) {
         new Thread(() -> {
             try {
