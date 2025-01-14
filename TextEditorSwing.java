@@ -112,6 +112,7 @@ public class TextEditorSwing extends JFrame {
         // Diffuser l'opération aux autres pairs
         for (String peer : peerDiscovery.getPeers()) {
             peerCommunication.sendMessage(operation.toString(), peer, 5000);
+            System.out.println("yay " + peer);
         }
     }
 

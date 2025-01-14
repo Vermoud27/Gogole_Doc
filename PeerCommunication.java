@@ -71,6 +71,7 @@ public class PeerCommunication {
                             this.ihm.recevoirMessage(message);
                         }
 
+                        //Réception des messages Fusion qui n'arrive pas ??
                         if(operation.getOperationType().equals("FUSION"))
                         {
                             String text = this.getFichier(operation.getFichier());
