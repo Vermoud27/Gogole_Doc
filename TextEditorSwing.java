@@ -60,7 +60,7 @@ public class TextEditorSwing extends JFrame {
                 if (changeContent != null) {
                     TextOperation operation = new TextOperation( "MODIFIER", "FICHIER", textArea.getCaretPosition(), textArea.getText(),//changeContent,
                             System.currentTimeMillis(), "Node-" + peerDiscovery.hashCode());
-                    operationLog.add(operation);
+                    //operationLog.add(operation);
 
                     envoyerMessage(operation);
                 }
@@ -191,6 +191,8 @@ public class TextEditorSwing extends JFrame {
                 textArea.setCaretPosition(currentCaretPosition);
 
                 textArea.getDocument().addDocumentListener(listener);
+
+                System.out.println("FICHIER MODIFIER AVEC " + operation.getContent());
 
             } catch (Exception e) {
                 e.printStackTrace();

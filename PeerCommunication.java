@@ -82,8 +82,9 @@ public class PeerCommunication {
                             //Envoi du fichiers fusion aux autres
                             TextOperation operationEnvoi = new TextOperation( "MODIFIER", operation.getFichier(), 0, fusion, System.currentTimeMillis(), "Node-?" );
                         
-                            this.ihm.envoyerMessage(operationEnvoi);
                             this.ihm.recevoirMessage(operation);
+                            this.ihm.envoyerMessage(operationEnvoi);
+                            
 
                             //System.out.println(fusion);
                         }
