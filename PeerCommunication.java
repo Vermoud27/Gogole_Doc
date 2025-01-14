@@ -68,7 +68,7 @@ public class PeerCommunication {
                             //Modifier le textArea si on est dessus
 
                             //envoi dy message à l'ihm
-                            this.ihm.recevoirMessage(message);
+                            this.ihm.recevoirMessage(operation);
                         }
 
                         //Réception des messages Fusion qui n'arrive pas ??
@@ -83,9 +83,9 @@ public class PeerCommunication {
                             TextOperation operationEnvoi = new TextOperation( "MODIFIER", operation.getFichier(), 0, fusion, System.currentTimeMillis(), "Node-?" );
                         
                             this.ihm.envoyerMessage(operationEnvoi);
-                            this.ihm.recevoirMessage(fusion);
+                            this.ihm.recevoirMessage(operation);
 
-                            System.out.println(fusion);
+                            //System.out.println(fusion);
                         }
 
                         //

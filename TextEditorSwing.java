@@ -112,15 +112,14 @@ public class TextEditorSwing extends JFrame {
         // Diffuser l'opération aux autres pairs
         for (String peer : peerDiscovery.getPeers()) {
             peerCommunication.sendMessage(operation.toString(), peer, 5000);
-            System.out.println("yay " + peer);
         }
     }
 
-    public void recevoirMessage(String message)
+    public void recevoirMessage(TextOperation operation)
     {
-        if(message != null)
+        if(operation != null)
         {
-            TextOperation operation = TextOperation.fromString(message);
+            //TextOperation operation = TextOperation.fromString(message);
             operationQueue.add(operation);
             processOperations();
         }
