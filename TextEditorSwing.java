@@ -27,6 +27,8 @@ public class TextEditorSwing extends JFrame {
         this.peerCommunication = peerCommunication;
         this.operationQueue = new PriorityQueue<>(Comparator.comparingLong(TextOperation::getTimestamp));
 
+        this.peerCommunication.setIHM(this);
+
         // Initialisation de l'interface Swing
         setTitle("Éditeur de Texte P2P");
         setSize(1000, 600); // Augmenté la largeur pour accueillir la nouvelle section
@@ -274,7 +276,7 @@ public class TextEditorSwing extends JFrame {
         //add(scrollPane, BorderLayout.CENTER);
 
         //permet la reception des messages
-        peerCommunication.setIHM(this);
+        
 
         
         
