@@ -460,7 +460,7 @@ public class TextEditorSwing extends JFrame {
 
     public void supprimerFichier(String fichier) 
     {
-        String filePath = fichier;
+        String filePath = "file/" + fichier;
     
         // Supprimer le fichier du système de fichiers
         File file = new File(filePath);
