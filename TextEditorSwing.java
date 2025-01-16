@@ -170,7 +170,7 @@ public class TextEditorSwing extends JFrame {
             
             if (files != null) {
                 for (File file : files) {
-                    String saveFilePath = file.getAbsolutePath();
+                    String saveFilePath = "file/" + file.getName();
                     String fileContent = readFile(file); // Lire le contenu du fichier
                     TextOperation operation = new TextOperation("FUSION", saveFilePath, 0, fileContent, System.currentTimeMillis(), "Node-" + peerDiscovery.hashCode());
                     
