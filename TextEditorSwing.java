@@ -268,6 +268,10 @@ public class TextEditorSwing extends JFrame {
         if(operation != null)
         {
 
+            System.out.println(operation.getFichier());
+            System.out.println("file/" + getSelectedTabTitle() + ".txt");
+            System.out.println(operation.getFichier().equals("file/" + getSelectedTabTitle() + ".txt"));
+            
             if(operation.getFichier().equals("file/" + getSelectedTabTitle() + ".txt"))
             {
                 //modifier le textarea
