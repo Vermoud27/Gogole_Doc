@@ -34,24 +34,6 @@ public class TextEditorSwing extends JFrame {
 
         tabbedPane = new JTabbedPane();
 
-        // Ajouter une variable pour suivre l'onglet précédent
-
-        tabbedPane.addChangeListener(e -> {
-            int selectedIndex = tabbedPane.getSelectedIndex();
-            if (selectedIndex != -1) {
-                String tabTitle = tabbedPane.getTitleAt(selectedIndex);
-
-                JScrollPane selectedScrollPane = (JScrollPane) tabbedPane.getComponentAt(selectedIndex);
-                JTextArea textArea = (JTextArea) selectedScrollPane.getViewport().getView();
-
-                try {
-                    textArea.setText(FileManager.loadFromFile( "file/" + tabTitle + ".txt"));
-                } catch (IOException e1) {
-                    e1.printStackTrace();
-                }
-            }
-        });
-
         openExistingFiles();
 
         // Ajout d'un premier onglet par défaut
@@ -107,7 +89,22 @@ public class TextEditorSwing extends JFrame {
         add(buttonPanel, BorderLayout.SOUTH);
 
 
+        tabbedPane.addChangeListener(e -> {
+            int selectedIndex = tabbedPane.getSelectedIndex();
+            if (selectedIndex != -1) {
+                String tabTitle = tabbedPane.getTitleAt(selectedIndex);
 
+                JScrollPane selectedScrollPane = (JScrollPane) tabbedPane.getComponentAt(selectedIndex);
+                JTextArea textArea = (JTextArea) selectedScrollPane.getViewport().getView();
+
+                try {
+                    textArea.setText(FileManager.loadFromFile( "file/" + tabTitle + ".txt"));
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+            }
+        });
+        
         //Vérifier les fichiers 
         //Demander les fichiers
         //envoi de la demande de fusion des fichiers
