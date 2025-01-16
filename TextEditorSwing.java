@@ -477,7 +477,7 @@ public class TextEditorSwing extends JFrame {
         }
     
         // Supprimer l'onglet associé
-        int tabIndex = findTabIndexByTitle(fichier); // Trouver l'index de l'onglet correspondant
+        int tabIndex = findTabIndexByTitle(FileManager.extractFileNameWithoutExtension(fichier)); // Trouver l'index de l'onglet correspondant
         if (tabIndex != -1) {
             tabbedPane.remove(tabIndex); // Supprimer l'onglet
             System.out.println("Onglet supprimé : " + fichier);
