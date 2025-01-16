@@ -196,9 +196,10 @@ public class TextEditorSwing extends JFrame {
             private void handleTextChange() {
                 String currentText = textArea.getText();
                 String changeContent = findChangeContent(previousText, currentText);
+                String saveFilePath = "file/" + getSelectedTabTitle() + ".txt";
 
                 if (changeContent != null) {
-                    TextOperation operation = new TextOperation( "MODIFIER", "FICHIER", textArea.getCaretPosition(), textArea.getText(),//changeContent,
+                    TextOperation operation = new TextOperation( "MODIFIER", saveFilePath, textArea.getCaretPosition(), textArea.getText(),//changeContent,
                             System.currentTimeMillis(), "Node-" + peerDiscovery.hashCode());
                     //operationLog.add(operation);
 
@@ -208,7 +209,6 @@ public class TextEditorSwing extends JFrame {
                 previousText = currentText;
 
                 try {
-                    String saveFilePath = "file/" + getSelectedTabTitle() + ".txt";
                     FileManager.saveToFile(currentText, saveFilePath);
                 } catch (IOException e) {
                     System.err.println("Erreur lors de la sauvegarde : " + e.getMessage());
@@ -339,10 +339,12 @@ public class TextEditorSwing extends JFrame {
                 private void handleTextChange() {
                     String currentText = textArea.getText();
                     String changeContent = findChangeContent(previousText, currentText);
+                    String saveFilePath = "file/" + getSelectedTabTitle() + ".txt";
     
                     if (changeContent != null) {
-                        TextOperation operation = new TextOperation( "MODIFIER", "FICHIER", textArea.getCaretPosition(), textArea.getText(),//changeContent,
+                        TextOperation operation = new TextOperation( "MODIFIER", saveFilePath, textArea.getCaretPosition(), textArea.getText(),//changeContent,
                                 System.currentTimeMillis(), "Node-" + peerDiscovery.hashCode());
+                        //operationLog.add(operation);
     
                         envoyerMessage(operation);
                     }
@@ -350,7 +352,6 @@ public class TextEditorSwing extends JFrame {
                     previousText = currentText;
     
                     try {
-                        String saveFilePath = "file/" + getSelectedTabTitle() + ".txt";
                         FileManager.saveToFile(currentText, saveFilePath);
                     } catch (IOException e) {
                         System.err.println("Erreur lors de la sauvegarde : " + e.getMessage());
