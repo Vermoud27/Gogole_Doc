@@ -92,6 +92,9 @@ public class TextEditorSwing extends JFrame {
         tabbedPane.addChangeListener(e -> {
             int selectedIndex = tabbedPane.getSelectedIndex();
             if (selectedIndex != -1) {
+
+                System.out.println("CHANGEMENT ONGLET");
+
                 String tabTitle = tabbedPane.getTitleAt(selectedIndex);
 
                 JScrollPane selectedScrollPane = (JScrollPane) tabbedPane.getComponentAt(selectedIndex);
@@ -283,11 +286,6 @@ public class TextEditorSwing extends JFrame {
     {
         if(operation != null)
         {
-
-            System.out.println(operation.getFichier());
-            System.out.println("file/" + getSelectedTabTitle() + ".txt");
-            System.out.println(operation.getFichier().equals("file/" + getSelectedTabTitle() + ".txt"));
-            
             if(operation.getFichier().equals("file/" + getSelectedTabTitle() + ".txt"))
             {
                 //modifier le textarea
