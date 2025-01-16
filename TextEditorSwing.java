@@ -267,8 +267,20 @@ public class TextEditorSwing extends JFrame {
     {
         if(operation != null)
         {
-            operationQueue.add(operation);
-            processOperations();
+            if(operation.getFichier().equals(getSelectedTabTitle() + ".txt"))
+            {
+                //modifier le textarea
+                operationQueue.add(operation);
+                processOperations();
+            }
+            
+            //Sauvegarder dans le fichier
+            try {
+                String saveFilePath = "file/" + getSelectedTabTitle() + ".txt";
+                FileManager.saveToFile(operation.getContent(), saveFilePath);
+            } catch (IOException e) {
+                System.err.println("Erreur lors de la sauvegarde : " + e.getMessage());
+            }
         }
     }
 
@@ -321,21 +333,24 @@ public class TextEditorSwing extends JFrame {
 
                 private void handleTextChange() {
                     String currentText = textArea.getText();
-                    int changePosition = findChangePosition(previousText, currentText);
                     String changeContent = findChangeContent(previousText, currentText);
-
+    
                     if (changeContent != null) {
-                        String operationType = currentText.length() > previousText.length() ? "INSERT" : "DELETE";
-                        String saveFilePath = "file/" + getSelectedTabTitle() + ".txt";
-                        TextOperation operation = new TextOperation(operationType, saveFilePath, getSelectedTabPosition(), getSelectedTabContent(), System.currentTimeMillis(), "Node-" + peerDiscovery.hashCode());
-                        operationLog.add(operation);
-
-                        // Diffuser l'opération aux autres pairs
-                        for (String peer : peerDiscovery.getPeers()) {
-                            peerCommunication.sendMessage(operation.toString(), peer, 5000);
-                        }
+                        TextOperation operation = new TextOperation( "MODIFIER", "FICHIER", textArea.getCaretPosition(), textArea.getText(),//changeContent,
+                                System.currentTimeMillis(), "Node-" + peerDiscovery.hashCode());
+    
+                        envoyerMessage(operation);
                     }
-
+    
+                    previousText = currentText;
+    
+                    try {
+                        String saveFilePath = "file/" + getSelectedTabTitle() + ".txt";
+                        FileManager.saveToFile(currentText, saveFilePath);
+                    } catch (IOException e) {
+                        System.err.println("Erreur lors de la sauvegarde : " + e.getMessage());
+                    }
+                
                     previousText = currentText;
                 }
             };
