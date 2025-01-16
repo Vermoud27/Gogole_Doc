@@ -95,7 +95,7 @@ public class PeerCommunication {
                             for (String missingFile : extraLocalFiles) {
                                 String filePath = "file/" + missingFile;
                                 String fileContent = "";
-                                
+
                                 try {
                                     fileContent = getFichier(filePath); // Lire le contenu du fichier local manquant
                                 } catch (IOException e) {
@@ -130,6 +130,11 @@ public class PeerCommunication {
                                 try {
                                     // Si le fichier n'existe pas, le créer et sauvegarder le contenu
                                     FileManager.saveToFile(operation.getContent(), filePath);
+
+                                    //Permettre d'ouvrir l'onglet 
+                                    TextOperation operationEnvoi = new TextOperation( "MODIFIER", operation.getFichier(), 0, operation.getContent(), System.currentTimeMillis(), "Node-?" );
+                                    this.ihm.recevoirMessage(operationEnvoi);
+
                                 } catch (IOException e) {
                                     System.err.println("Erreur lors de la sauvegarde du fichier : " + e.getMessage());
                                 }
