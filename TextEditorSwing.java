@@ -161,18 +161,27 @@ public class TextEditorSwing extends JFrame {
         try {
             Thread.sleep(3000);
         } catch (Exception e) {}
-
-        String saveFilePath = "file/" + getSelectedTabTitle() + ".txt";
-        TextOperation operation = new TextOperation("FUSION", saveFilePath, 0, getSelectedTabContent(), System.currentTimeMillis(), "Node-" + peerDiscovery.hashCode());
         
-        for (String peer : peerDiscovery.getPeers())
-        {
-            peerCommunication.sendMessage(operation.toString(), peer, 5000);
+        //FUSION des différents fichiers
+        File folder = new File("file");
+        if (folder.exists() && folder.isDirectory()) {
+            // Récupérer tous les fichiers dans le dossier
+            File[] files = folder.listFiles((dir, name) -> name.endsWith(".txt")); // Filtrer pour ne prendre que les fichiers .txt
             
-            //break; //envoi seulement au 1er
+            if (files != null) {
+                for (File file : files) {
+                    String saveFilePath = file.getAbsolutePath();
+                    String fileContent = readFile(file); // Lire le contenu du fichier
+                    TextOperation operation = new TextOperation("FUSION", saveFilePath, 0, fileContent, System.currentTimeMillis(), "Node-" + peerDiscovery.hashCode());
+                    
+                    for (String peer : peerDiscovery.getPeers()) {
+                        peerCommunication.sendMessage(operation.toString(), peer, 5000);
+                    }
+                }
+            }
+        } else {
+            System.out.println("Le dossier 'file' est introuvable ou n'est pas un répertoire.");
         }
-
-
 
         setVisible(true);
     }
@@ -302,8 +311,24 @@ public class TextEditorSwing extends JFrame {
             } catch (IOException e) {
                 System.err.println("Erreur lors de la sauvegarde : " + e.getMessage());
             }
+
+            String nom = FileManager.extractFileNameWithoutExtension(operation.getFichier());
+            if (!isTabOpen(nom)) {
+                addTabWithContent(nom, operation.getContent());
+            }
         }
     }
+
+    private boolean isTabOpen(String filePath) {
+        for (int i = 0; i < tabbedPane.getTabCount(); i++) {
+            String tabTitle = tabbedPane.getTitleAt(i);
+            if (tabTitle.equals(new File(filePath).getName())) { // Comparer avec le nom du fichier
+                return true;
+            }
+        }
+        return false;
+    }
+    
 
     private int fileCounter = 1; // Compteur global pour les fichiers
 

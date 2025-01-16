@@ -1,7 +1,6 @@
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.io.BufferedReader;
 
 public class FileManager {
 
@@ -24,5 +23,12 @@ public class FileManager {
             }
         }
         return content.toString().trim(); // Supprime les espaces inutiles
+    }
+
+    public static String extractFileNameWithoutExtension(String filePath) {
+        File file = new File(filePath);
+        String fileName = file.getName(); // Récupère le nom avec extension
+        int dotIndex = fileName.lastIndexOf('.'); // Trouve la position du dernier point
+        return (dotIndex == -1) ? fileName : fileName.substring(0, dotIndex); // Retire l'extension
     }
 }
