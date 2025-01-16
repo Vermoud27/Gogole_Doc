@@ -34,6 +34,24 @@ public class TextEditorSwing extends JFrame {
 
         tabbedPane = new JTabbedPane();
 
+        // Ajouter une variable pour suivre l'onglet précédent
+
+        tabbedPane.addChangeListener(e -> {
+            int selectedIndex = tabbedPane.getSelectedIndex();
+            if (selectedIndex != -1) {
+                String tabTitle = tabbedPane.getTitleAt(selectedIndex);
+
+                JScrollPane selectedScrollPane = (JScrollPane) tabbedPane.getComponentAt(selectedIndex);
+                JTextArea textArea = (JTextArea) selectedScrollPane.getViewport().getView();
+
+                try {
+                    textArea.setText(FileManager.loadFromFile( "file/" + tabTitle + ".txt"));
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+            }
+        });
+
         openExistingFiles();
 
         // Ajout d'un premier onglet par défaut
@@ -201,7 +219,6 @@ public class TextEditorSwing extends JFrame {
                 if (changeContent != null) {
                     TextOperation operation = new TextOperation( "MODIFIER", saveFilePath, textArea.getCaretPosition(), textArea.getText(),//changeContent,
                             System.currentTimeMillis(), "Node-" + peerDiscovery.hashCode());
-                    //operationLog.add(operation);
 
                     envoyerMessage(operation);
                 }
@@ -281,8 +298,7 @@ public class TextEditorSwing extends JFrame {
             
             //Sauvegarder dans le fichier
             try {
-                String saveFilePath = "file/" + getSelectedTabTitle() + ".txt";
-                FileManager.saveToFile(operation.getContent(), saveFilePath);
+                FileManager.saveToFile(operation.getContent(), operation.getFichier());
             } catch (IOException e) {
                 System.err.println("Erreur lors de la sauvegarde : " + e.getMessage());
             }
