@@ -34,6 +34,48 @@ public class TextEditorSwing extends JFrame {
 
         tabbedPane = new JTabbedPane();
 
+        // Ajout d'un DocumentListener pour détecter les modifications
+        this.listener = new DocumentListener() {
+            private String previousText = "";
+
+            public void insertUpdate(DocumentEvent e) {
+                handleTextChange();
+            }
+
+            public void removeUpdate(DocumentEvent e) {
+                handleTextChange();
+            }
+
+            public void changedUpdate(DocumentEvent e) {
+            }
+
+            private void handleTextChange() {
+                JScrollPane selectedScrollPane = (JScrollPane) tabbedPane.getComponentAt(tabbedPane.getSelectedIndex());
+                JTextArea textArea = (JTextArea) selectedScrollPane.getViewport().getView();
+
+                String currentText = textArea.getText();
+                String changeContent = findChangeContent(previousText, currentText);
+                String saveFilePath = "file/" + getSelectedTabTitle() + ".txt";
+
+                if (changeContent != null) {
+                    TextOperation operation = new TextOperation( "MODIFIER", saveFilePath, textArea.getCaretPosition(), textArea.getText(),//changeContent,
+                            System.currentTimeMillis(), "Node-" + peerDiscovery.hashCode());
+
+                    envoyerMessage(operation);
+                }
+
+                previousText = currentText;
+
+                try {
+                    FileManager.saveToFile(currentText, saveFilePath);
+                } catch (IOException e) {
+                    System.err.println("Erreur lors de la sauvegarde : " + e.getMessage());
+                }
+            
+                previousText = currentText;
+            }
+        };
+
         openExistingFiles();
 
         // Ajout d'un premier onglet par défaut
@@ -100,13 +142,13 @@ public class TextEditorSwing extends JFrame {
                 JScrollPane selectedScrollPane = (JScrollPane) tabbedPane.getComponentAt(selectedIndex);
                 JTextArea textArea = (JTextArea) selectedScrollPane.getViewport().getView();
 
-                textArea.getDocument().removeDocumentListener(listener);
+                textArea.getDocument().removeDocumentListener(this.listener);
                 try {
                     textArea.setText(FileManager.loadFromFile( "file/" + tabTitle + ".txt"));
                 } catch (IOException e1) {
                     e1.printStackTrace();
                 }
-                textArea.getDocument().addDocumentListener(listener);
+                textArea.getDocument().addDocumentListener(this.listener);
             }
         });
 
@@ -198,46 +240,7 @@ public class TextEditorSwing extends JFrame {
         // Ajouter l'onglet avec le titre et le contenu
         tabbedPane.addTab(title, scrollPane);
 
-        // Ajout d'un DocumentListener pour détecter les modifications
-        listener = new DocumentListener() {
-            private String previousText = "";
-
-            public void insertUpdate(DocumentEvent e) {
-                handleTextChange();
-            }
-
-            public void removeUpdate(DocumentEvent e) {
-                handleTextChange();
-            }
-
-            public void changedUpdate(DocumentEvent e) {
-            }
-
-            private void handleTextChange() {
-                String currentText = textArea.getText();
-                String changeContent = findChangeContent(previousText, currentText);
-                String saveFilePath = "file/" + getSelectedTabTitle() + ".txt";
-
-                if (changeContent != null) {
-                    TextOperation operation = new TextOperation( "MODIFIER", saveFilePath, textArea.getCaretPosition(), textArea.getText(),//changeContent,
-                            System.currentTimeMillis(), "Node-" + peerDiscovery.hashCode());
-
-                    envoyerMessage(operation);
-                }
-
-                previousText = currentText;
-
-                try {
-                    FileManager.saveToFile(currentText, saveFilePath);
-                } catch (IOException e) {
-                    System.err.println("Erreur lors de la sauvegarde : " + e.getMessage());
-                }
-            
-                previousText = currentText;
-            }
-        };
-
-        textArea.getDocument().addDocumentListener(listener);
+        textArea.getDocument().addDocumentListener(this.listener);
 
         // Menu contextuel pour l'onglet
         JPopupMenu contextMenu = new JPopupMenu();
@@ -334,47 +337,7 @@ public class TextEditorSwing extends JFrame {
             // Ajout de l'onglet avec le nom
             tabbedPane.addTab(fileName, scrollPane);
 
-            // DocumentListener pour détecter les modifications
-            DocumentListener listener = new DocumentListener() {
-                private String previousText = "";
-
-                public void insertUpdate(DocumentEvent e) {
-                    handleTextChange();
-                }
-
-                public void removeUpdate(DocumentEvent e) {
-                    handleTextChange();
-                }
-
-                public void changedUpdate(DocumentEvent e) {
-                }
-
-                private void handleTextChange() {
-                    String currentText = textArea.getText();
-                    String changeContent = findChangeContent(previousText, currentText);
-                    String saveFilePath = "file/" + getSelectedTabTitle() + ".txt";
-    
-                    if (changeContent != null) {
-                        TextOperation operation = new TextOperation( "MODIFIER", saveFilePath, textArea.getCaretPosition(), textArea.getText(),//changeContent,
-                                System.currentTimeMillis(), "Node-" + peerDiscovery.hashCode());
-                        //operationLog.add(operation);
-    
-                        envoyerMessage(operation);
-                    }
-    
-                    previousText = currentText;
-    
-                    try {
-                        FileManager.saveToFile(currentText, saveFilePath);
-                    } catch (IOException e) {
-                        System.err.println("Erreur lors de la sauvegarde : " + e.getMessage());
-                    }
-                
-                    previousText = currentText;
-                }
-            };
-
-            textArea.getDocument().addDocumentListener(listener);
+            textArea.getDocument().addDocumentListener(this.listener);
 
             // Menu contextuel pour l'onglet
             JPopupMenu contextMenu = new JPopupMenu();
@@ -506,7 +469,7 @@ public class TextEditorSwing extends JFrame {
                 JTextArea textArea = (JTextArea) selectedScrollPane.getViewport().getView();
 
             try {
-                textArea.getDocument().removeDocumentListener(listener);
+                textArea.getDocument().removeDocumentListener(this.listener);
 
                 // Récupérer l'ancien texte avant modification
                 String oldText = textArea.getText();
@@ -534,7 +497,7 @@ public class TextEditorSwing extends JFrame {
 
                     textArea.setCaretPosition(currentCaretPosition);
 
-                textArea.getDocument().addDocumentListener(listener);
+                textArea.getDocument().addDocumentListener(this.listener);
 
             } catch (Exception e) {
                 e.printStackTrace();
