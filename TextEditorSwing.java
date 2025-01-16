@@ -97,14 +97,16 @@ public class TextEditorSwing extends JFrame {
                 JScrollPane selectedScrollPane = (JScrollPane) tabbedPane.getComponentAt(selectedIndex);
                 JTextArea textArea = (JTextArea) selectedScrollPane.getViewport().getView();
 
+                textArea.getDocument().removeDocumentListener(listener);
                 try {
                     textArea.setText(FileManager.loadFromFile( "file/" + tabTitle + ".txt"));
                 } catch (IOException e1) {
                     e1.printStackTrace();
                 }
+                textArea.getDocument().addDocumentListener(listener);
             }
         });
-        
+
         //Vérifier les fichiers 
         //Demander les fichiers
         //envoi de la demande de fusion des fichiers
