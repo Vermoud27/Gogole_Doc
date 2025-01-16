@@ -258,18 +258,6 @@ public class TextEditorSwing extends JFrame {
 
         textArea.getDocument().addDocumentListener(this.listener);
 
-        // Menu contextuel pour l'onglet
-        JPopupMenu contextMenu = new JPopupMenu();
-
-        JMenuItem renameTabItem = new JMenuItem("Renommer l'onglet");
-        renameTabItem.addActionListener(e -> renameTab(tabbedPane.getSelectedIndex()));
-
-        JMenuItem changeColorItem = new JMenuItem("Changer la couleur");
-        changeColorItem.addActionListener(e -> changeTabBackground(tabbedPane.getSelectedIndex()));
-
-        contextMenu.add(renameTabItem);
-        contextMenu.add(changeColorItem);
-
         // Ajout du menu contextuel et gestion du clic droit/double clic
         tabbedPane.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent evt) {
@@ -277,6 +265,7 @@ public class TextEditorSwing extends JFrame {
                     int tabIndex = tabbedPane.indexAtLocation(evt.getX(), evt.getY());
                     if (tabIndex != -1) {
                         tabbedPane.setSelectedIndex(tabIndex); // Sélectionner l'onglet cliqué
+                        JPopupMenu contextMenu = createContextMenu(tabIndex); // Créer le menu contextuel
                         contextMenu.show(tabbedPane, evt.getX(), evt.getY());
                     }
                 }
@@ -339,6 +328,30 @@ public class TextEditorSwing extends JFrame {
 
     private int fileCounter = 1; // Compteur global pour les fichiers
 
+    // Méthode pour créer dynamiquement le menu contextuel
+    private JPopupMenu createContextMenu(int tabIndex) 
+    {
+        JPopupMenu contextMenu = new JPopupMenu();
+
+        JMenuItem renameTabItem = new JMenuItem("Renommer l'onglet");
+        renameTabItem.addActionListener(e -> renameTab(tabIndex));
+
+        JMenuItem changeColorItem = new JMenuItem("Changer la couleur");
+        changeColorItem.addActionListener(e -> changeTabBackground(tabIndex));
+
+        JMenuItem deleteTabItem = new JMenuItem("Supprimer l'onglet");
+        deleteTabItem.addActionListener(e -> deleteTab(tabIndex));
+
+        contextMenu.add(renameTabItem);
+        contextMenu.add(changeColorItem);
+        contextMenu.add(deleteTabItem);
+
+        return contextMenu;
+    }
+
+
+
+
     private void addNewTab(String baseTitle) {
         JTextArea textArea = new JTextArea();
         JScrollPane scrollPane = new JScrollPane(textArea);
@@ -371,30 +384,19 @@ public class TextEditorSwing extends JFrame {
 
             textArea.getDocument().addDocumentListener(this.listener);
 
-            // Menu contextuel pour l'onglet
-            JPopupMenu contextMenu = new JPopupMenu();
-
-            JMenuItem renameTabItem = new JMenuItem("Renommer l'onglet");
-            renameTabItem.addActionListener(e -> renameTab(tabbedPane.getSelectedIndex()));
-
-            JMenuItem changeColorItem = new JMenuItem("Changer la couleur");
-            changeColorItem.addActionListener(e -> changeTabBackground(tabbedPane.getSelectedIndex()));
-
-            contextMenu.add(renameTabItem);
-            contextMenu.add(changeColorItem);
-
-            // Ajout du menu contextuel et gestion du clic droit/double clic
-            tabbedPane.addMouseListener(new MouseAdapter() {
-                public void mousePressed(MouseEvent evt) {
-                    if (SwingUtilities.isRightMouseButton(evt) || evt.getClickCount() == 2) {
-                        int tabIndex = tabbedPane.indexAtLocation(evt.getX(), evt.getY());
-                        if (tabIndex != -1) {
-                            tabbedPane.setSelectedIndex(tabIndex); // Sélectionner l'onglet cliqué
-                            contextMenu.show(tabbedPane, evt.getX(), evt.getY());
-                        }
+         // Ajout du menu contextuel et gestion du clic droit/double clic
+        tabbedPane.addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent evt) {
+                if (SwingUtilities.isRightMouseButton(evt) || evt.getClickCount() == 2) {
+                    int tabIndex = tabbedPane.indexAtLocation(evt.getX(), evt.getY());
+                    if (tabIndex != -1) {
+                        tabbedPane.setSelectedIndex(tabIndex); // Sélectionner l'onglet cliqué
+                        JPopupMenu contextMenu = createContextMenu(tabIndex); // Créer le menu contextuel
+                        contextMenu.show(tabbedPane, evt.getX(), evt.getY());
                     }
                 }
-            });
+            }
+        });
 
         } catch (IOException e) {
             JOptionPane.showMessageDialog(this, "Erreur lors de la création du fichier.", "Erreur",
@@ -428,6 +430,71 @@ public class TextEditorSwing extends JFrame {
             }
         }
     }
+
+    private void deleteTab(int tabIndex) {
+        if (tabIndex != -1) {
+            // Récupérer le nom du fichier correspondant à l'onglet
+            String fileName = tabbedPane.getTitleAt(tabIndex);
+
+            // Supprimer l'onglet
+            tabbedPane.removeTabAt(tabIndex);
+
+            // Supprimer le fichier associé
+            File fileToDelete = new File("file", fileName + ".txt");
+            if (fileToDelete.exists()) {
+                if (fileToDelete.delete()) {
+                    System.out.println("Fichier supprimé : " + fileToDelete.getAbsolutePath());
+                } else {
+                    JOptionPane.showMessageDialog(this, "Erreur lors de la suppression du fichier.", "Erreur",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+            }
+
+            //Envoyer aux autres la suppression d'un fichier
+            TextOperation operation = new TextOperation( "SUPPRIMER", fileToDelete.getName(), 0, "", System.currentTimeMillis(), "Node-" + peerDiscovery.hashCode());
+            envoyerMessage(operation);
+        }
+    }
+
+    public void supprimerFichier(String fichier) 
+    {
+        String filePath = fichier;
+    
+        // Supprimer le fichier du système de fichiers
+        File file = new File(filePath);
+        if (file.exists()) {
+            if (file.delete()) {
+                System.out.println("Fichier supprimé : " + filePath);
+            } else {
+                System.err.println("Impossible de supprimer le fichier : " + filePath);
+                return; // Arrêter si la suppression échoue
+            }
+        } else {
+            System.err.println("Le fichier n'existe pas : " + filePath);
+            return;
+        }
+    
+        // Supprimer l'onglet associé
+        int tabIndex = findTabIndexByTitle(fichier); // Trouver l'index de l'onglet correspondant
+        if (tabIndex != -1) {
+            tabbedPane.remove(tabIndex); // Supprimer l'onglet
+            System.out.println("Onglet supprimé : " + fichier);
+        } else {
+            System.err.println("Aucun onglet correspondant au fichier : " + fichier);
+        }
+    }
+    
+    // Méthode utilitaire pour trouver l'index d'un onglet par son titre
+    private int findTabIndexByTitle(String title) 
+    {
+        for (int i = 0; i < tabbedPane.getTabCount(); i++) {
+            if (tabbedPane.getTitleAt(i).equals(title)) {
+                return i;
+            }
+        }
+        return -1; // Retourne -1 si aucun onglet ne correspond
+    }
+    
 
     private void changeTabBackground(int tabIndex) {
         if (tabIndex != -1) {

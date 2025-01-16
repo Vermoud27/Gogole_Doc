@@ -44,13 +44,15 @@ public class PeerCommunication {
         return addresses;
     }
 
-    public void startListening() {
+    public void startListening() 
+    {
         new Thread(() -> 
         {
             System.out.println("Listening for messages on port " + port + "...");
             while (true) 
             {
-                try {
+                try 
+                {
                     byte[] buffer = new byte[10_000_000];
                     DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                     socket.receive(packet);
@@ -73,6 +75,11 @@ public class PeerCommunication {
 
                             //envoi dy message à l'ihm
                             this.ihm.recevoirMessage(operation);
+                        }
+
+                        if(operation.getOperationType().equals("SUPPRIMER"))
+                        {
+                            this.ihm.supprimerFichier(operation.getFichier());
                         }
 
                         if (operation.getOperationType().equals("LISTE")) 
