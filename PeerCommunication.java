@@ -1,10 +1,14 @@
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.*;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class PeerCommunication {
@@ -47,7 +51,7 @@ public class PeerCommunication {
             while (true) 
             {
                 try {
-                    byte[] buffer = new byte[10000000];
+                    byte[] buffer = new byte[10_000_000];
                     DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                     socket.receive(packet);
 
@@ -71,29 +75,79 @@ public class PeerCommunication {
                             this.ihm.recevoirMessage(operation);
                         }
 
+                        if (operation.getOperationType().equals("LISTE")) 
+                        {
+                            // Liste des fichiers reçus
+                            String[] receivedFileNames = operation.getContent().split("|"); // Supposons que les noms sont séparés par des virgules
+
+                            // Liste des fichiers locaux
+                            List<String> localFiles = getLocalFileNames();
+
+                            // Identifier les fichiers manquants
+                            List<String> extraLocalFiles = new ArrayList<>();
+                            for (String localFile : localFiles) {
+                                if (!Arrays.asList(receivedFileNames).contains(localFile)) {
+                                    extraLocalFiles.add(localFile); // Ajouter les fichiers locaux qui ne sont pas dans la liste reçue
+                                }
+                            }
+
+                            // Envoyer les fichiers manquants au pair
+                            for (String missingFile : extraLocalFiles) {
+                                String filePath = "file/" + missingFile;
+                                String fileContent = "";
+                                
+                                try {
+                                    fileContent = getFichier(filePath); // Lire le contenu du fichier local manquant
+                                } catch (IOException e) {
+                                    System.err.println("Erreur lors de la lecture du fichier : " + e.getMessage());
+                                }
+
+                                // Créer une opération de type FUSION pour envoyer le fichier manquant
+                                TextOperation operation2 = new TextOperation(
+                                    "MODIFIER",
+                                    filePath,
+                                    0,
+                                    fileContent,
+                                    System.currentTimeMillis(),
+                                    "Node-"
+                                );
+
+                                // Envoyer au pair
+                                this.ihm.envoyerMessage(operation2);
+                            }
+                        }
+
+
                         //Réception des messages Fusion qui n'arrive pas ??
                         if(operation.getOperationType().equals("FUSION"))
                         {
-                            String text = this.getFichier(operation.getFichier());
-                            
-                            //fusion des fichiers
-                            String fusion = DiffMerger.mergeStrings(operation.getContent(), text);
+                            String filePath = operation.getFichier();
 
-                            //Envoi du fichiers fusion aux autres
-                            TextOperation operationEnvoi = new TextOperation( "MODIFIER", operation.getFichier(), 0, fusion, System.currentTimeMillis(), "Node-?" );
-                        
-                            this.ihm.recevoirMessage(operationEnvoi);
-                            this.ihm.envoyerMessage(operationEnvoi);
+                            // Vérifier si le fichier existe localement
+                            File file = new File(filePath);
+                            if (!file.exists()) 
+                            {
+                                try {
+                                    // Si le fichier n'existe pas, le créer et sauvegarder le contenu
+                                    FileManager.saveToFile(operation.getContent(), filePath);
+                                } catch (IOException e) {
+                                    System.err.println("Erreur lors de la sauvegarde du fichier : " + e.getMessage());
+                                }
+                            }
+                            else 
+                            {
+                                String text = this.getFichier(operation.getFichier());
                             
-
-                            //System.out.println(fusion);
+                                //fusion des fichiers
+                                String fusion = DiffMerger.mergeStrings(operation.getContent(), text);
+    
+                                //Envoi du fichiers fusion aux autres
+                                TextOperation operationEnvoi = new TextOperation( "MODIFIER", operation.getFichier(), 0, fusion, System.currentTimeMillis(), "Node-?" );
+                            
+                                this.ihm.recevoirMessage(operationEnvoi);
+                                this.ihm.envoyerMessage(operationEnvoi);
+                            }
                         }
-
-                        //
-                        //Récupérer ou envoiyer des fichiers aux autres
-                        //
-                        
-                        
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -101,6 +155,21 @@ public class PeerCommunication {
             }
         }).start();
     }
+
+    private List<String> getLocalFileNames() {
+        File folder = new File("file");
+        List<String> fileNames = new ArrayList<>();
+        if (folder.exists() && folder.isDirectory()) {
+            File[] files = folder.listFiles((dir, name) -> name.endsWith(".txt"));
+            if (files != null) {
+                for (File file : files) {
+                    fileNames.add(file.getName()); // Récupère uniquement le nom du fichier
+                }
+            }
+        }
+        return fileNames;
+    }
+    
 
     public String getFichier(String filePath) throws IOException
     {

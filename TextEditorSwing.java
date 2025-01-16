@@ -152,15 +152,12 @@ public class TextEditorSwing extends JFrame {
             }
         });
 
-        //Vérifier les fichiers 
-        //Demander les fichiers
-        //envoi de la demande de fusion des fichiers
-
-
         //Attendre que les connexions se trouvent
         try {
             Thread.sleep(3000);
         } catch (Exception e) {}
+
+        String fichiers = "";
         
         //FUSION des différents fichiers
         File folder = new File("file");
@@ -171,16 +168,26 @@ public class TextEditorSwing extends JFrame {
             if (files != null) {
                 for (File file : files) {
                     String saveFilePath = "file/" + file.getName();
+                    fichiers += file.getName() + "|";
                     String fileContent = readFile(file); // Lire le contenu du fichier
                     TextOperation operation = new TextOperation("FUSION", saveFilePath, 0, fileContent, System.currentTimeMillis(), "Node-" + peerDiscovery.hashCode());
                     
                     for (String peer : peerDiscovery.getPeers()) {
                         peerCommunication.sendMessage(operation.toString(), peer, 5000);
+                        break; //envoie seulement au 1er
                     }
                 }
             }
         } else {
             System.out.println("Le dossier 'file' est introuvable ou n'est pas un répertoire.");
+        }
+
+        //Envoyer la liste des fichiers pour qu'il envoie les nouveaux fichiers
+        TextOperation operation = new TextOperation("LISTE", fichiers, 0, "", System.currentTimeMillis(), "Node-" + peerDiscovery.hashCode());
+                    
+        for (String peer : peerDiscovery.getPeers()) {
+            peerCommunication.sendMessage(operation.toString(), peer, 5000);
+            break; //envoie seulement au 1er
         }
 
         setVisible(true);
@@ -242,7 +249,7 @@ public class TextEditorSwing extends JFrame {
         return content.toString();
     }
 
-    private void addTabWithContent(String title, String content) {
+    public void addTabWithContent(String title, String content) {
         JTextArea textArea = new JTextArea(content);
         JScrollPane scrollPane = new JScrollPane(textArea);
 
