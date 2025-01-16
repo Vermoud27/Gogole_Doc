@@ -267,7 +267,8 @@ public class TextEditorSwing extends JFrame {
     {
         if(operation != null)
         {
-            if(operation.getFichier().equals(getSelectedTabTitle() + ".txt"))
+
+            if(operation.getFichier().equals("file/" + getSelectedTabTitle() + ".txt"))
             {
                 //modifier le textarea
                 operationQueue.add(operation);
