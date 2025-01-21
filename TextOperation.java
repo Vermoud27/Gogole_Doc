@@ -43,11 +43,11 @@ public class TextOperation implements Serializable {
 
     @Override
     public String toString() {
-        return operationType + ":" + fichier + ":" + position + ":" + content + ":" + timestamp + ":" + nodeId;
+        return operationType + ":::" + fichier + ":::" + position + ":::" + content + ":::" + timestamp + ":::" + nodeId;
     }
 
     public static TextOperation fromString(String operationString) {
-        String[] parts = operationString.split(":");
+        String[] parts = operationString.split(":::");
         return new TextOperation(parts[0], parts[1], Integer.parseInt(parts[2]), parts[3], Long.parseLong(parts[4]), parts[5]);
     }
 }
