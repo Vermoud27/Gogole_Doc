@@ -28,7 +28,6 @@ public class TextEditorSwing extends JFrame {
 
     private Map<String, CursorInfo> userCursors = new HashMap<>();
     private Map<String, Color> userColors = new HashMap<>();
-    private Map<JTextArea, Integer> caretPositions = new HashMap<>();
 
     private static class CursorInfo {
         int position;
@@ -149,31 +148,18 @@ public class TextEditorSwing extends JFrame {
         });
     }
 
-    // Méthode qui met à jour la position du curseur
-    private void updateUserCaret(String nodeId, int caretPosition, JTextArea textArea) {
-        if (!userCursors.containsKey(nodeId)) {
-            userCursors.put(nodeId, new CursorInfo(caretPosition, Color.BLUE)); // Par défaut, bleu pour l'utilisateur
-        } else {
-            userCursors.get(nodeId).position = caretPosition; // Met à jour la position du curseur existant
-        }
+    private void updateUserCaret(String userId, int position, JTextArea textArea) {
+    try {
+        Highlighter highlighter = textArea.getHighlighter();
+        highlighter.removeAllHighlights();
 
-        // Repeindre les curseurs après la mise à jour
-        repaintCursors(textArea);
+        // Ajout du chariot d'insertion de l'utilisateur avec sa couleur
+        highlighter.addHighlight(position, position + 1, 
+            new DefaultHighlighter.DefaultHighlightPainter(getUserColor(userId)));
+    } catch (BadLocationException e) {
+        e.printStackTrace();
     }
-
-    // Méthode pour ajouter un écouteur de mouvement de curseur
-    private void addCaretListener(JTextArea textArea) {
-        textArea.addCaretListener(e -> {
-            int caretPosition = e.getDot(); // Récupère la position du curseur actuel
-
-            // Met à jour la position du curseur pour ce JTextArea dans la map
-            caretPositions.put(textArea, caretPosition);
-
-            // Repeindre tous les curseurs (afficher les autres curseurs si nécessaire)
-            repaintCursors(textArea);
-        });
-    }
-
+}
 
     private void openExistingFiles() {
         try {
@@ -227,8 +213,6 @@ public class TextEditorSwing extends JFrame {
 
         // Ajouter l'onglet avec le titre et le contenu
         tabbedPane.addTab(title, scrollPane);
-
-        addCaretListener(textArea); // Remplacez "userNodeId" par l'identifiant de l'utilisateur
 
         // Ajout d'un DocumentListener pour détecter les modifications
         DocumentListener listener = new DocumentListener() {
@@ -525,29 +509,21 @@ public class TextEditorSwing extends JFrame {
             repaintCursors(textArea);
         }
     }
-    
-    private void repaintCursors(JTextArea textArea) {
-        textArea.getHighlighter().removeAllHighlights(); // Supprimer les anciennes surbrillances
 
-        caretPositions.forEach((otherTextArea, caretPosition) -> {
-            if (otherTextArea != textArea) { // Ne pas afficher le curseur de l'utilisateur actuel
-                String userId = "Node-" + otherTextArea.hashCode(); // Identifiant unique de l'utilisateur
-                Color color = getUserColor(userId); // Récupérer la couleur associée à cet utilisateur
-                try {
-                    // Ajouter une surbrillance à la position de chaque curseur dans le JTextArea
-                    otherTextArea.getHighlighter().addHighlight(
-                            caretPosition, 
-                            caretPosition + 1, 
-                            new DefaultHighlighter.DefaultHighlightPainter(color)
-                    );
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+    private void repaintCursors(JTextArea textArea) {
+        textArea.getHighlighter().removeAllHighlights();
+        userCursors.forEach((nodeId, cursorInfo) -> {
+            try {
+                textArea.getHighlighter().addHighlight(
+                    cursorInfo.position,
+                    cursorInfo.position + 1,
+                    new DefaultHighlighter.DefaultHighlightPainter(cursorInfo.color)
+                );
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         });
     }
-
-
 
    private void applyOperation(TextOperation operation) {
     SwingUtilities.invokeLater(() -> {
@@ -560,15 +536,15 @@ public class TextEditorSwing extends JFrame {
                 String oldText = textArea.getText();
                 int currentCaretPosition = textArea.getCaretPosition();
 
-                // Appliquer les modifications de texte (insertion ou suppression)
+                // Appliquer les modifications de texte si nécessaire
                 if (operation.getOperationType().equals("INSERT") 
                         || operation.getOperationType().equals("DELETE")) {
                     textArea.setText(operation.getContent());
                 }
 
-                // Mettre à jour la position du curseur pour cet utilisateur (si mouvement)
+                // Mettre à jour la position du chariot de l'utilisateur
                 updateUserCaret(operation.getNodeId(), operation.getPosition(), textArea);
-                
+
                 // Ajuster la position du chariot local
                 String newText = textArea.getText();
                 if (currentCaretPosition > operation.getPosition()) {
@@ -576,7 +552,6 @@ public class TextEditorSwing extends JFrame {
                     currentCaretPosition += lengthDifference;
                 }
 
-                // Limiter la position du chariot au texte actuel
                 if (currentCaretPosition > textArea.getText().length()) {
                     currentCaretPosition = textArea.getText().length();
                 }
@@ -585,11 +560,7 @@ public class TextEditorSwing extends JFrame {
                     currentCaretPosition = 0;
                 }
 
-                // Mise à jour de la position du curseur local
                 textArea.setCaretPosition(currentCaretPosition);
-
-                // Mettre à jour l'affichage des curseurs des utilisateurs
-                repaintCursors(textArea);
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -597,6 +568,5 @@ public class TextEditorSwing extends JFrame {
         }
     });
 }
-
 
 }
