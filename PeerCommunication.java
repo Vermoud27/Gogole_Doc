@@ -63,10 +63,9 @@ public class PeerCommunication {
                     // Ignorer les messages provenant des adresses locales
                     if (!localAddresses.contains(senderAddress) && this.ihm != null) 
                     {
-                        TextOperation operation = TextOperation.fromString(message);
-
                         System.out.println("Received message: " + message + " from " + senderAddress);
 
+                        TextOperation operation = TextOperation.fromString(message);
 
                         if(operation.getOperationType().equals("MODIFIER"))
                         {
