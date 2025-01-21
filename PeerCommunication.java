@@ -151,9 +151,16 @@ public class PeerCommunication {
                             else 
                             {
                                 String text = this.getFichier(operation.getFichier());
+
+                                String ip = "";
+                                for (String addr : this.localAddresses) {
+                                    ip = addr;
+                                    break;
+                                }
+                                
                             
                                 //fusion des fichiers
-                                String fusion = DiffMerger.mergeStrings(operation.getContent(), text);
+                                String fusion = DiffMerger.mergeStrings(operation.getContent(), text, operation.getNodeId(), ip );
     
                                 //Envoi du fichiers fusion aux autres
                                 TextOperation operationEnvoi = new TextOperation( "MODIFIER", operation.getFichier(), 0, fusion, System.currentTimeMillis(), "Node-?" );
