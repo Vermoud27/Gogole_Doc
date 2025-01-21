@@ -13,12 +13,18 @@ import java.util.*;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
 public class TextEditorSwing extends JFrame {
     private JTabbedPane tabbedPane;
     private CopyOnWriteArrayList<TextOperation> operationLog = new CopyOnWriteArrayList<>();
     private PeerDiscovery peerDiscovery;
     private PeerCommunication peerCommunication;
     private PriorityQueue<TextOperation> operationQueue;
+
+    private final String filePath; // Fichier JSON pour enregistrer les couleurs
+    private Map<Integer, String> tabOngletColors; // Stocke les couleurs des onglets
 
     // Liste pour les utilisateurs connectés et leurs adresses IP
     private DefaultListModel<String> connectedUsersListModel = new DefaultListModel<>();
@@ -54,6 +60,9 @@ public class TextEditorSwing extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         tabbedPane = new JTabbedPane();
+
+        this.filePath = "tabOngletColors.json";
+        this.tabOngletColors = new HashMap<>();
 
         // Ajout d'un DocumentListener pour détecter les modifications
         this.listener = new DocumentListener() {
@@ -229,6 +238,7 @@ public class TextEditorSwing extends JFrame {
             }
         }
 
+        loadTabColors(); 
         setVisible(true);
     }
 
@@ -590,10 +600,16 @@ public class TextEditorSwing extends JFrame {
     private void changeTabBackground(int tabIndex) {
         if (tabIndex != -1) {
             // Afficher un sélecteur de couleur pour l'utilisateur
-            Color newColor = JColorChooser.showDialog(this, "Choisissez une couleur pour l'onglet:", Color.WHITE);
+            Color newColor = JColorChooser.showDialog(tabbedPane, "Choisissez une couleur pour l'onglet:", Color.WHITE);
             if (newColor != null) {
                 // Changer la couleur de l'onglet spécifié
                 tabbedPane.setBackgroundAt(tabIndex, newColor);
+
+                // Convertir la couleur en format hexadécimal et mettre à jour la map
+                String colorHex = String.format("#%02x%02x%02x", newColor.getRed(), newColor.getGreen(), newColor.getBlue());
+                tabOngletColors.put(tabIndex, colorHex);
+                // Sauvegarder dans le fichier JSON
+                saveTabColors();
             }
         }
     }
@@ -750,6 +766,73 @@ public class TextEditorSwing extends JFrame {
             return textArea.getCaretPosition();
         }
         return 0;
+    }
+
+    private void saveTabColors() {
+        try (FileWriter writer = new FileWriter(filePath)) {
+            writer.write("{\n");
+            for (Map.Entry<Integer, String> entry : tabOngletColors.entrySet()) {
+                writer.write("  \"" + entry.getKey() + "\": \"" + entry.getValue() + "\",\n");
+            }
+            // Supprimer la dernière virgule
+            if (!tabOngletColors.isEmpty()) {
+                writer.write("}\n".replace(",\n}", "\n}"));
+            } else {
+                writer.write("}\n");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    private void loadTabColors() {
+        try {
+            // Lire le fichier JSON en tant que String
+            String json = new String(Files.readAllBytes(Paths.get(filePath))).trim();
+    
+            // Vérifier si le JSON est vide
+            if (json.isEmpty() || json.equals("{}")) {
+                System.out.println("Fichier JSON vide ou inexistant.");
+                return;
+            }
+    
+            // Supprimer les accolades pour simplifier le parsing
+            json = json.substring(1, json.length() - 1).trim();
+    
+            // Diviser les entrées du JSON (clé-valeur)
+            String[] entries = json.split(",");
+            for (String entry : entries) {
+                // Diviser chaque paire clé-valeur
+                String[] keyValue = entry.split(":");
+                if (keyValue.length != 2) {
+                    System.out.println("Entrée JSON invalide : " + entry);
+                    continue;
+                }
+    
+                // Nettoyer les clés et les valeurs
+                String keyString = keyValue[0].trim().replace("\"", ""); // Supprimer les guillemets
+                String valueString = keyValue[1].trim().replace("\"", ""); // Supprimer les guillemets
+    
+                // Convertir la clé en entier
+                try {
+                    int tabIndex = Integer.parseInt(keyString);
+    
+                    // Vérifier si l'indice d'onglet est valide
+                    if (tabIndex >= 0 && tabIndex < tabbedPane.getTabCount()) {
+                        // Ajouter la couleur dans la map et l'appliquer à l'onglet
+                        tabOngletColors.put(tabIndex, valueString);
+                        tabbedPane.setBackgroundAt(tabIndex, Color.decode(valueString));
+                    } else {
+                        System.out.println("Indice d'onglet invalide : " + tabIndex);
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println("Clé non valide : " + keyString);
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Erreur lors de la lecture du fichier JSON : " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("Erreur inattendue : " + e.getMessage());
+        }
     }
 
     
