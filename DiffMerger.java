@@ -17,7 +17,7 @@ public class DiffMerger {
     private static List<String> mergeWithLCS(List<String> lines1, List<String> lines2, String ip1, String ip2) {
         int n = lines1.size();
         int m = lines2.size();
-
+    
         // Calculer la LCS entre les deux listes de lignes
         int[][] dp = new int[n + 1][m + 1];
         for (int i = 1; i <= n; i++) {
@@ -29,81 +29,54 @@ public class DiffMerger {
                 }
             }
         }
-
+    
         // Reconstruire la fusion
         List<String> mergedLines = new ArrayList<>();
         int i = n, j = m;
-
-        StringBuilder removedBlock = new StringBuilder();
-        StringBuilder addedBlock = new StringBuilder();
-
+    
         while (i > 0 || j > 0) {
             if (i > 0 && j > 0 && lines1.get(i - 1).equals(lines2.get(j - 1))) {
-                // Ajouter les blocs précédents avant de continuer
-                if (removedBlock.length() > 0) {
-                    if (!mergedLines.contains("======================================")) {
-                        mergedLines.add("======================================");
-                    }
-                    mergedLines.add(removedBlock.toString().stripTrailing());
-                    if (!mergedLines.contains("==== TEXTE DE L'IP : " + ip1 + " ====")) {
-                        mergedLines.add("==== TEXTE DE L'IP : " + ip1 + " ====");
-                    }
-                    removedBlock.setLength(0); // Réinitialiser le bloc
-                }
-                if (addedBlock.length() > 0) {
-                    if (!mergedLines.contains("======================================")) {
-                        mergedLines.add("======================================");
-                    }
-                    mergedLines.add(addedBlock.toString().stripTrailing());
-                    if (!mergedLines.contains("==== TEXTE DE L'IP : " + ip2 + " ====")) {
-                        mergedLines.add("==== TEXTE DE L'IP : " + ip2 + " ====");
-                    }
-                    addedBlock.setLength(0); // Réinitialiser le bloc
-                }
-
                 // Ligne commune
                 mergedLines.add(lines1.get(i - 1));
                 i--;
                 j--;
             } else if (j > 0 && (i == 0 || dp[i][j - 1] >= dp[i - 1][j])) {
                 // Ligne ajoutée dans la deuxième chaîne
-                addedBlock.insert(0, lines2.get(j - 1) + "\n");
+                String lineToAdd = lines2.get(j - 1);
+                if (!isAnnotation(lineToAdd) || !mergedLines.contains(lineToAdd)) {
+                    mergedLines.add(lineToAdd);
+                }
                 j--;
             } else {
                 // Ligne supprimée de la première chaîne
-                removedBlock.insert(0, lines1.get(i - 1) + "\n");
+                String lineToRemove = lines1.get(i - 1);
+                if (!isAnnotation(lineToRemove) || !mergedLines.contains(lineToRemove)) {
+                    mergedLines.add(lineToRemove);
+                }
                 i--;
             }
         }
-
-        // Ajouter les derniers blocs (s'il y en a)
-        if (removedBlock.length() > 0) {
-            mergedLines.add("======================================");
-            mergedLines.add(removedBlock.toString().stripTrailing());
-            mergedLines.add("==== TEXTE DE L'IP : " + ip1 + " ====");
-        }
-        if (addedBlock.length() > 0) {
-            mergedLines.add("======================================");
-            mergedLines.add(addedBlock.toString().stripTrailing());
-            mergedLines.add("==== TEXTE DE L'IP : " + ip2 + " ====");
-        }
-
+    
         // Inverser la liste pour remettre dans l'ordre original
         Collections.reverse(mergedLines);
-
+    
         return mergedLines;
     }
+    
+    // Méthode pour vérifier si une ligne est une annotation
+    private static boolean isAnnotation(String line) {
+        return line.startsWith("==== TEXTE DE L'IP") || line.startsWith("======================================");
+    }    
 
     public static void main(String[] args) {
         // Exemple d'utilisation
         String str1 = """
                 Paragraphe 1
                 Paragraphe 1
-                Paragraphe 1
 
-                Paragraphe 2
-                Paragraphe 2
-                Paragraphe 2
+                Nouveau Paragraphe 2
+                Nouveau Paragraphe 2
+                Nouveau Paragraphe 2
 
                 Paragraphe 3
                 Paragraphe 3
@@ -113,15 +86,17 @@ public class DiffMerger {
         String str2 = """
                 Paragraphe 1
                 Paragraphe 1
-                Paragraphe 1
 
-                Nouveau paragraphe 22
-                Nouveau paragraphe 2
-                Nouveau paragraphe 2
+                Nouveau Paragraphe 2
+                Nouveau Paragraphe 2
+                Nouveau Paragraphe 2
 
                 Paragraphe 3
                 Paragraphe 3
                 Paragraphe 3
+                ==== TEXTE DE L'IP : 127.0.0.1 ====
+                test
+                ======================================
                 """;
 
         String result = mergeStrings(str1, str2, "172.16.97.45", "172.16.97.38");
