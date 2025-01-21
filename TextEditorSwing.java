@@ -1,14 +1,12 @@
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.DefaultHighlighter;
-import javax.swing.text.Highlighter;
-
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.net.UnknownHostException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -19,24 +17,11 @@ public class TextEditorSwing extends JFrame {
     private PeerDiscovery peerDiscovery;
     private PeerCommunication peerCommunication;
     private PriorityQueue<TextOperation> operationQueue;
-
+    private final String filePath; // Fichier JSON pour enregistrer les couleurs
+    private Map<Integer, String> tabOngletColors; // Stocke les couleurs des onglets
     // Liste pour les utilisateurs connectés et leurs adresses IP
     private DefaultListModel<String> connectedUsersListModel = new DefaultListModel<>();
     private JList<String> connectedUsersList = new JList<>(connectedUsersListModel);
-
-
-    private Map<String, CursorInfo> userCursors = new HashMap<>();
-    private Map<String, Color> userColors = new HashMap<>();
-
-    private static class CursorInfo {
-        int position;
-        Color color;
-
-        CursorInfo(int position, Color color) {
-            this.position = position;
-            this.color = color;
-        }
-    }
 
     private DocumentListener listener;
 
@@ -54,6 +39,8 @@ public class TextEditorSwing extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         tabbedPane = new JTabbedPane();
+        this.filePath = "tabOngletColors.json";
+        this.tabOngletColors = new HashMap<>();
 
         // Ajout d'un DocumentListener pour détecter les modifications
         this.listener = new DocumentListener() {
@@ -98,11 +85,6 @@ public class TextEditorSwing extends JFrame {
         };
 
         openExistingFiles();
-
-        // Ajout d'un premier onglet par défaut
-        /*if (tabbedPane.getTabCount() == 0) {
-            addNewTab("Nouveau fichier");
-        }*/
 
         // Création des boutons
         JButton newTabButton = new JButton("Nouvel onglet");
@@ -230,22 +212,8 @@ public class TextEditorSwing extends JFrame {
         }
 
         setVisible(true);
+        loadTabColors(); // Charger les couleurs existantes au démarrage
     }
-
-    private Color generateRandomColor() {
-        Random random = new Random();
-        return new Color(random.nextInt(256), random.nextInt(256), random.nextInt(256));
-    }
-
-
-    private Color getUserColor(String userId) {
-        return userColors.computeIfAbsent(userId, key -> {
-            Random rand = new Random();
-            return new Color(rand.nextInt(256), rand.nextInt(256), rand.nextInt(256));
-        });
-    }
-
-
 
     // Met à jour la liste des utilisateurs connectés
     private void updateConnectedUsers(List<String> peers) {
@@ -256,19 +224,6 @@ public class TextEditorSwing extends JFrame {
             }
         });
     }
-
-    private void updateUserCaret(String userId, int position, JTextArea textArea) {
-    try {
-        Highlighter highlighter = textArea.getHighlighter();
-        highlighter.removeAllHighlights();
-
-        // Ajout du chariot d'insertion de l'utilisateur avec sa couleur
-        highlighter.addHighlight(position, position + 1, 
-            new DefaultHighlighter.DefaultHighlightPainter(getUserColor(userId)));
-    } catch (BadLocationException e) {
-        e.printStackTrace();
-    }
-}
 
     private void openExistingFiles() {
         try {
@@ -586,17 +541,93 @@ public class TextEditorSwing extends JFrame {
         return -1; // Retourne -1 si aucun onglet ne correspond
     }
     
+    // Gestion des couleurs des onglets
 
-    private void changeTabBackground(int tabIndex) {
+    public void changeTabBackground(int tabIndex) {
         if (tabIndex != -1) {
             // Afficher un sélecteur de couleur pour l'utilisateur
-            Color newColor = JColorChooser.showDialog(this, "Choisissez une couleur pour l'onglet:", Color.WHITE);
+            Color newColor = JColorChooser.showDialog(tabbedPane, "Choisissez une couleur pour l'onglet:", Color.WHITE);
             if (newColor != null) {
-                // Changer la couleur de l'onglet spécifié
+                // Appliquer la nouvelle couleur à l'onglet
                 tabbedPane.setBackgroundAt(tabIndex, newColor);
+
+                // Convertir la couleur en format hexadécimal et mettre à jour la map
+                String colorHex = String.format("#%02x%02x%02x", newColor.getRed(), newColor.getGreen(), newColor.getBlue());
+                tabOngletColors.put(tabIndex, colorHex);
+
+                // Sauvegarder dans le fichier JSON
+                saveTabColors();
             }
         }
     }
+
+    private void saveTabColors() {
+        try (FileWriter writer = new FileWriter(filePath)) {
+            writer.write("{\n");
+            for (Map.Entry<Integer, String> entry : tabOngletColors.entrySet()) {
+                writer.write("  \"" + entry.getKey() + "\": \"" + entry.getValue() + "\",\n");
+            }
+            // Supprimer la dernière virgule
+            if (!tabOngletColors.isEmpty()) {
+                writer.write("}\n".replace(",\n}", "\n}"));
+            } else {
+                writer.write("}\n");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void loadTabColors() {
+        try {
+            // Lire le fichier JSON en tant que String
+            String json = new String(Files.readAllBytes(Paths.get(filePath))).trim();
+    
+            // Vérifier si le JSON est vide
+            if (json.isEmpty() || json.equals("{}")) {
+                System.out.println("Fichier JSON vide ou inexistant.");
+                return;
+            }
+    
+            // Supprimer les accolades pour simplifier le parsing
+            json = json.substring(1, json.length() - 1).trim();
+    
+            // Diviser les entrées du JSON (clé-valeur)
+            String[] entries = json.split(",");
+            for (String entry : entries) {
+                // Diviser chaque paire clé-valeur
+                String[] keyValue = entry.split(":");
+                if (keyValue.length != 2) {
+                    System.out.println("Entrée JSON invalide : " + entry);
+                    continue;
+                }
+    
+                // Nettoyer les clés et les valeurs
+                String keyString = keyValue[0].trim().replace("\"", ""); // Supprimer les guillemets
+                String valueString = keyValue[1].trim().replace("\"", ""); // Supprimer les guillemets
+    
+                // Convertir la clé en entier
+                try {
+                    int tabIndex = Integer.parseInt(keyString);
+    
+                    // Vérifier si l'indice d'onglet est valide
+                    if (tabIndex >= 0 && tabIndex < tabbedPane.getTabCount()) {
+                        // Ajouter la couleur dans la map et l'appliquer à l'onglet
+                        tabOngletColors.put(tabIndex, valueString);
+                        tabbedPane.setBackgroundAt(tabIndex, Color.decode(valueString));
+                    } else {
+                        System.out.println("Indice d'onglet invalide : " + tabIndex);
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println("Clé non valide : " + keyString);
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Erreur lors de la lecture du fichier JSON : " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("Erreur inattendue : " + e.getMessage());
+        }
+    }  
 
     private void sauvegarder(JButton saveButton) {
         saveButton.addActionListener(e -> {
@@ -649,37 +680,14 @@ public class TextEditorSwing extends JFrame {
                 applyOperation(operation);
             }
         });
-
-         // Réinitialiser les curseurs après chaque traitement
-        int selectedTabIndex = tabbedPane.getSelectedIndex();
-        if (selectedTabIndex != -1) {
-            JScrollPane selectedScrollPane = (JScrollPane) tabbedPane.getComponentAt(selectedTabIndex);
-            JTextArea textArea = (JTextArea) selectedScrollPane.getViewport().getView();
-            repaintCursors(textArea);
-        }
     }
 
-    private void repaintCursors(JTextArea textArea) {
-        textArea.getHighlighter().removeAllHighlights();
-        userCursors.forEach((nodeId, cursorInfo) -> {
-            try {
-                textArea.getHighlighter().addHighlight(
-                    cursorInfo.position,
-                    cursorInfo.position + 1,
-                    new DefaultHighlighter.DefaultHighlightPainter(cursorInfo.color)
-                );
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
-    }
-
-   private void applyOperation(TextOperation operation) {
-    SwingUtilities.invokeLater(() -> {
-        int selectedTabIndex = tabbedPane.getSelectedIndex();
-        if (selectedTabIndex != -1) {
-            JScrollPane selectedScrollPane = (JScrollPane) tabbedPane.getComponentAt(selectedTabIndex);
-            JTextArea textArea = (JTextArea) selectedScrollPane.getViewport().getView();
+    private void applyOperation(TextOperation operation) {
+        SwingUtilities.invokeLater(() -> {
+            int selectedTabIndex = tabbedPane.getSelectedIndex();
+            if (selectedTabIndex != -1) {
+                JScrollPane selectedScrollPane = (JScrollPane) tabbedPane.getComponentAt(selectedTabIndex);
+                JTextArea textArea = (JTextArea) selectedScrollPane.getViewport().getView();
 
             try {
                 textArea.getDocument().removeDocumentListener(this.listener);
@@ -693,25 +701,22 @@ public class TextEditorSwing extends JFrame {
                 // Appliquer l'opération reçue
                 textArea.setText(operation.getContent());
 
-                // Mettre à jour la position du chariot de l'utilisateur
-                updateUserCaret(operation.getNodeId(), operation.getPosition(), textArea);
+                    String newText = textArea.getText();
 
-                // Ajuster la position du chariot local
-                String newText = textArea.getText();
-                if (currentCaretPosition > operation.getPosition()) {
-                    int lengthDifference = newText.length() - oldText.length();
-                    currentCaretPosition += lengthDifference;
-                }
+                    if (currentCaretPosition > operation.getPosition()) {
+                        int lengthDifference = newText.length() - oldText.length();
+                        currentCaretPosition += lengthDifference;
+                    }
 
-                if (currentCaretPosition > textArea.getText().length()) {
-                    currentCaretPosition = textArea.getText().length();
-                }
+                    if (currentCaretPosition > textArea.getText().length()) {
+                        currentCaretPosition = textArea.getText().length();
+                    }
 
-                if (currentCaretPosition < 0) {
-                    currentCaretPosition = 0;
-                }
+                    if (currentCaretPosition < 0) {
+                        currentCaretPosition = 0;
+                    }
 
-                textArea.setCaretPosition(currentCaretPosition);
+                    textArea.setCaretPosition(currentCaretPosition);
 
                 textArea.getDocument().addDocumentListener(this.listener);
 
