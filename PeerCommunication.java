@@ -157,7 +157,6 @@ public class PeerCommunication {
                                     ip = addr;
                                     break;
                                 }
-                                
                             
                                 //fusion des fichiers
                                 String fusion = DiffMerger.mergeStrings(operation.getContent(), text, operation.getNodeId(), ip );

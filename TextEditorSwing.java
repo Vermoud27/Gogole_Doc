@@ -4,6 +4,7 @@ import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
+import java.net.UnknownHostException;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -172,7 +173,15 @@ public class TextEditorSwing extends JFrame {
                     String saveFilePath = "file/" + file.getName();
                     fichiers += file.getName() + "|";
                     String fileContent = readFile(file); // Lire le contenu du fichier
-                    TextOperation operation = new TextOperation("FUSION", saveFilePath, 0, fileContent, System.currentTimeMillis(), "Node-" + peerDiscovery.hashCode());
+                    
+                    String ip = "";
+                    try {
+                        ip = peerDiscovery.getLocalIP();
+                    } catch (UnknownHostException e1) {
+                        e1.printStackTrace();
+                    }
+                    
+                    TextOperation operation = new TextOperation("FUSION", saveFilePath, 0, fileContent, System.currentTimeMillis(), ip);
                     
                     for (String peer : peerDiscovery.getPeers()) {
 
