@@ -81,7 +81,7 @@ public class PeerCommunication {
 
                         if(operation.getOperationType().equals("RENOMMER"))
                         {
-                            this.ihm.renommerFichier(operation.getFichier(), operation.getContent());
+                            this.ihm.renommerFichier( operation.getContent(), operation.getFichier());
                         }
 
                         if (operation.getOperationType().equals("LISTE")) 
