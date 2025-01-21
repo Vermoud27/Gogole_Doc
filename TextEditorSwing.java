@@ -1,6 +1,10 @@
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultHighlighter;
+import javax.swing.text.Highlighter;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
@@ -20,6 +24,23 @@ public class TextEditorSwing extends JFrame {
     // Liste pour les utilisateurs connectés et leurs adresses IP
     private DefaultListModel<String> connectedUsersListModel = new DefaultListModel<>();
     private JList<String> connectedUsersList = new JList<>(connectedUsersListModel);
+
+
+    private Map<String, CursorInfo> userCursors = new HashMap<>();
+    private Map<String, Color> userColors = new HashMap<>();
+
+    private static class CursorInfo {
+        int position;
+        Color color;
+
+        CursorInfo(int position, Color color) {
+            this.position = position;
+            this.color = color;
+        }
+    }
+
+
+
 
     public TextEditorSwing(PeerDiscovery peerDiscovery, PeerCommunication peerCommunication) {
         this.peerDiscovery = peerDiscovery;
@@ -102,6 +123,21 @@ public class TextEditorSwing extends JFrame {
         setVisible(true);
     }
 
+    private Color generateRandomColor() {
+        Random random = new Random();
+        return new Color(random.nextInt(256), random.nextInt(256), random.nextInt(256));
+    }
+
+
+    private Color getUserColor(String userId) {
+        return userColors.computeIfAbsent(userId, key -> {
+            Random rand = new Random();
+            return new Color(rand.nextInt(256), rand.nextInt(256), rand.nextInt(256));
+        });
+    }
+
+
+
     // Met à jour la liste des utilisateurs connectés
     private void updateConnectedUsers(List<String> peers) {
         SwingUtilities.invokeLater(() -> {
@@ -111,6 +147,19 @@ public class TextEditorSwing extends JFrame {
             }
         });
     }
+
+    private void updateUserCaret(String userId, int position, JTextArea textArea) {
+    try {
+        Highlighter highlighter = textArea.getHighlighter();
+        highlighter.removeAllHighlights();
+
+        // Ajout du chariot d'insertion de l'utilisateur avec sa couleur
+        highlighter.addHighlight(position, position + 1, 
+            new DefaultHighlighter.DefaultHighlightPainter(getUserColor(userId)));
+    } catch (BadLocationException e) {
+        e.printStackTrace();
+    }
+}
 
     private void openExistingFiles() {
         try {
@@ -199,6 +248,13 @@ public class TextEditorSwing extends JFrame {
                 }
 
                 previousText = currentText;
+
+                // Diffuser la position du chariot
+                int localCaretPosition = textArea.getCaretPosition();
+                for (String peer : peerDiscovery.getPeers()) {
+                    String caretMessage = "CARET_POSITION:" + peerDiscovery.hashCode() + ":" + localCaretPosition;
+                    peerCommunication.sendMessage(caretMessage, peer, 5000);
+                }
             }
         };
 
@@ -444,45 +500,73 @@ public class TextEditorSwing extends JFrame {
                 applyOperation(operation);
             }
         });
+
+         // Réinitialiser les curseurs après chaque traitement
+        int selectedTabIndex = tabbedPane.getSelectedIndex();
+        if (selectedTabIndex != -1) {
+            JScrollPane selectedScrollPane = (JScrollPane) tabbedPane.getComponentAt(selectedTabIndex);
+            JTextArea textArea = (JTextArea) selectedScrollPane.getViewport().getView();
+            repaintCursors(textArea);
+        }
     }
 
-    private void applyOperation(TextOperation operation) {
-        SwingUtilities.invokeLater(() -> {
-            int selectedTabIndex = tabbedPane.getSelectedIndex();
-            if (selectedTabIndex != -1) {
-                JScrollPane selectedScrollPane = (JScrollPane) tabbedPane.getComponentAt(selectedTabIndex);
-                JTextArea textArea = (JTextArea) selectedScrollPane.getViewport().getView();
-
-                try {
-                    String oldText = textArea.getText();
-                    int currentCaretPosition = textArea.getCaretPosition();
-
-                    if (operation.getOperationType().equals("INSERT")
-                            || operation.getOperationType().equals("DELETE")) {
-                        textArea.setText(operation.getContent());
-                    }
-
-                    String newText = textArea.getText();
-
-                    if (currentCaretPosition > operation.getPosition()) {
-                        int lengthDifference = newText.length() - oldText.length();
-                        currentCaretPosition += lengthDifference;
-                    }
-
-                    if (currentCaretPosition > textArea.getText().length()) {
-                        currentCaretPosition = textArea.getText().length();
-                    }
-
-                    if (currentCaretPosition < 0) {
-                        currentCaretPosition = 0;
-                    }
-
-                    textArea.setCaretPosition(currentCaretPosition);
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+    private void repaintCursors(JTextArea textArea) {
+        textArea.getHighlighter().removeAllHighlights();
+        userCursors.forEach((nodeId, cursorInfo) -> {
+            try {
+                textArea.getHighlighter().addHighlight(
+                    cursorInfo.position,
+                    cursorInfo.position + 1,
+                    new DefaultHighlighter.DefaultHighlightPainter(cursorInfo.color)
+                );
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         });
     }
+
+   private void applyOperation(TextOperation operation) {
+    SwingUtilities.invokeLater(() -> {
+        int selectedTabIndex = tabbedPane.getSelectedIndex();
+        if (selectedTabIndex != -1) {
+            JScrollPane selectedScrollPane = (JScrollPane) tabbedPane.getComponentAt(selectedTabIndex);
+            JTextArea textArea = (JTextArea) selectedScrollPane.getViewport().getView();
+
+            try {
+                String oldText = textArea.getText();
+                int currentCaretPosition = textArea.getCaretPosition();
+
+                // Appliquer les modifications de texte si nécessaire
+                if (operation.getOperationType().equals("INSERT") 
+                        || operation.getOperationType().equals("DELETE")) {
+                    textArea.setText(operation.getContent());
+                }
+
+                // Mettre à jour la position du chariot de l'utilisateur
+                updateUserCaret(operation.getNodeId(), operation.getPosition(), textArea);
+
+                // Ajuster la position du chariot local
+                String newText = textArea.getText();
+                if (currentCaretPosition > operation.getPosition()) {
+                    int lengthDifference = newText.length() - oldText.length();
+                    currentCaretPosition += lengthDifference;
+                }
+
+                if (currentCaretPosition > textArea.getText().length()) {
+                    currentCaretPosition = textArea.getText().length();
+                }
+
+                if (currentCaretPosition < 0) {
+                    currentCaretPosition = 0;
+                }
+
+                textArea.setCaretPosition(currentCaretPosition);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    });
+}
+
 }
