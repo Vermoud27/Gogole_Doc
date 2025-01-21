@@ -2,14 +2,21 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import java.net.UnknownHostException;
 import java.util.HashSet;
 import java.util.Set;
 
 public class PeerDiscovery {
     private static final String MULTICAST_GROUP = "230.0.0.0";
-    private static final int MULTICAST_PORT = 4446;
+    private static final int MULTICAST_PORT = 4447;
     private final Set<String> peers = new HashSet<>();
     private boolean running = true;
+
+    public String getLocalIP() throws UnknownHostException
+    {
+        InetAddress group = InetAddress.getByName(MULTICAST_GROUP);
+        return InetAddress.getLocalHost().getHostAddress();
+    }
 
     public void startListening() {
         new Thread(() -> {
