@@ -70,9 +70,6 @@ public class PeerCommunication {
 
                         if(operation.getOperationType().equals("MODIFIER"))
                         {
-                            //Modifier le fichier avce le nouveau message
-                            //Modifier le textArea si on est dessus
-
                             //envoi dy message à l'ihm
                             this.ihm.recevoirMessage(operation);
                         }
@@ -80,6 +77,11 @@ public class PeerCommunication {
                         if(operation.getOperationType().equals("SUPPRIMER"))
                         {
                             this.ihm.supprimerFichier(operation.getFichier());
+                        }
+
+                        if(operation.getOperationType().equals("RENOMMER"))
+                        {
+                            this.ihm.renommerFichier(operation.getFichier(), operation.getContent());
                         }
 
                         if (operation.getOperationType().equals("LISTE")) 
@@ -180,6 +182,11 @@ public class PeerCommunication {
             }
         }
         return fileNames;
+    }
+
+    public boolean adresseLocal(String addr)
+    {
+        return localAddresses.contains(addr);
     }
     
 

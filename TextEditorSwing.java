@@ -81,9 +81,9 @@ public class TextEditorSwing extends JFrame {
         openExistingFiles();
 
         // Ajout d'un premier onglet par défaut
-        if (tabbedPane.getTabCount() == 0) {
+        /*if (tabbedPane.getTabCount() == 0) {
             addNewTab("Nouveau fichier");
-        }
+        }*/
 
         // Création des boutons
         JButton newTabButton = new JButton("Nouvel onglet");
@@ -175,8 +175,13 @@ public class TextEditorSwing extends JFrame {
                     TextOperation operation = new TextOperation("FUSION", saveFilePath, 0, fileContent, System.currentTimeMillis(), "Node-" + peerDiscovery.hashCode());
                     
                     for (String peer : peerDiscovery.getPeers()) {
-                        peerCommunication.sendMessage(operation.toString(), peer, 5000);
-                        break; //envoie seulement au 1er
+
+                        //Vérifie qu'il envoie pas a lui meme
+                        if(!peerCommunication.adresseLocal(peer))
+                        {
+                            peerCommunication.sendMessage(operation.toString(), peer, 5000);
+                            break; //envoie seulement au 1er
+                        }
                     }
                 }
             }
@@ -188,8 +193,13 @@ public class TextEditorSwing extends JFrame {
         TextOperation operation = new TextOperation("LISTE", fichiers, 0, "", System.currentTimeMillis(), "Node-" + peerDiscovery.hashCode());
                     
         for (String peer : peerDiscovery.getPeers()) {
-            peerCommunication.sendMessage(operation.toString(), peer, 5000);
-            break; //envoie seulement au 1er
+
+            //Vérifie qu'il envoie pas a lui meme
+            if(!peerCommunication.adresseLocal(peer))
+            {
+                peerCommunication.sendMessage(operation.toString(), peer, 5000);
+                break; //envoie seulement au 1er
+            }
         }
 
         setVisible(true);
@@ -429,6 +439,30 @@ public class TextEditorSwing extends JFrame {
                                 JOptionPane.ERROR_MESSAGE);
                     }
                 }
+
+                TextOperation operation = new TextOperation( "RENOMMER", newName, 0, oldFileName, System.currentTimeMillis(), "Node-" + peerDiscovery.hashCode());
+                envoyerMessage(operation);
+            }
+        }
+    }
+
+    public void renommerFichier(String ancienNom, String nouveauNom)
+    {
+        int index = findTabIndexByTitle(ancienNom);
+
+        tabbedPane.setTitleAt(index, nouveauNom);
+
+        // Récupérer le fichier correspondant à l'ancien nom
+        File oldFile = new File("file", ancienNom + ".txt");
+        File newFile = new File("file", nouveauNom + ".txt");
+
+        // Renommer le fichier si nécessaire
+        if (oldFile.exists()) {
+            if (oldFile.renameTo(newFile)) {
+                System.out.println("Le fichier a été renommé avec succès.");
+            } else {
+                JOptionPane.showMessageDialog(this, "Erreur lors du renommage du fichier.", "Erreur",
+                        JOptionPane.ERROR_MESSAGE);
             }
         }
     }
