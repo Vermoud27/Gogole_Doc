@@ -8,7 +8,7 @@ Nouveau Paragraphe 2
 Paragraphe 3
 Paragraphe 3
 Paragraphe 3
-==== TEXTE DE L'IP : 127.0.0.1 ====
+==== TEXTE DE L'IP : 172.16.97.37 ====
 ==== TEXTE DE L'IP : 127.0.0.1 ====
 test
 ======================================

@@ -91,7 +91,14 @@ public class DiffMerger {
         // Inverser la liste pour remettre dans l'ordre original
         Collections.reverse(mergedLines);
 
-        return mergedLines;
+        // Supprimer les doublons d'annotations
+        List<String> uniqueLines = new ArrayList<>();
+        for (String line : mergedLines) {
+            if (uniqueLines.isEmpty() || !uniqueLines.get(uniqueLines.size() - 1).equals(line)) {
+                uniqueLines.add(line);
+            }
+        }
+        return uniqueLines;
     }
 
     public static void main(String[] args) {
