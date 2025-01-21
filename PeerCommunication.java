@@ -61,7 +61,7 @@ public class PeerCommunication {
                     String message = new String(packet.getData(), 0, packet.getLength());
 
                     // Ignorer les messages provenant des adresses locales
-                    if (!localAddresses.contains(senderAddress)) 
+                    if (!localAddresses.contains(senderAddress) && this.ihm != null) 
                     {
                         TextOperation operation = TextOperation.fromString(message);
 
