@@ -75,12 +75,10 @@ public class DiffMerger {
                 Paragraphe 1
 
                 Nouveau Paragraphe 2
-                Nouveau Paragraphe 2
-                Nouveau Paragraphe 2
 
                 Paragraphe 3
                 Paragraphe 3
-                Paragraphe 3
+                Paragraphe 4
                 """;
 
         String str2 = """

@@ -158,7 +158,7 @@ public class PeerCommunication {
                                 }
                             
                                 //fusion des fichiers
-                                String fusion = DiffMerger.mergeStrings(operation.getContent(), text, operation.getNodeId(), ip );
+                                String fusion = DiffMerger2.mergeStrings(operation.getContent(), text, operation.getNodeId(), ip );
     
                                 //Envoi du fichiers fusion aux autres
                                 TextOperation operationEnvoi = new TextOperation( "MODIFIER", operation.getFichier(), 0, fusion, System.currentTimeMillis(), "Node-?" );
