@@ -2,17 +2,9 @@ Paragraphe 1
 Paragraphe 1
 Paragraphe 1
 
-==== SUPPRIMÉ ====
 Nouveau Paragraphe 2
 Nouveau Paragraphe 2
 Nouveau Paragraphe 2
-==================
-
-==== AJOUT DE L'IP ====
-Paragraphe 2
-Paragraphe 2
-Paragraphe 2
-=======================
 
 
 Paragraphe 3
