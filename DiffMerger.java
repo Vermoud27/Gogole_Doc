@@ -41,15 +41,23 @@ public class DiffMerger {
             if (i > 0 && j > 0 && lines1.get(i - 1).equals(lines2.get(j - 1))) {
                 // Ajouter les blocs précédents avant de continuer
                 if (removedBlock.length() > 0) {
-                    mergedLines.add("======================================");
+                    if (!mergedLines.contains("======================================")) {
+                        mergedLines.add("======================================");
+                    }
                     mergedLines.add(removedBlock.toString().stripTrailing());
-                    mergedLines.add("==== TEXTE DE L'IP : "+ip1+" ====");
+                    if (!mergedLines.contains("==== TEXTE DE L'IP : " + ip1 + " ====")) {
+                        mergedLines.add("==== TEXTE DE L'IP : " + ip1 + " ====");
+                    }
                     removedBlock.setLength(0); // Réinitialiser le bloc
                 }
                 if (addedBlock.length() > 0) {
-                    mergedLines.add("======================================");
+                    if (!mergedLines.contains("======================================")) {
+                        mergedLines.add("======================================");
+                    }
                     mergedLines.add(addedBlock.toString().stripTrailing());
-                    mergedLines.add("==== TEXTE DE L'IP : "+ip2+" ====");
+                    if (!mergedLines.contains("==== TEXTE DE L'IP : " + ip2 + " ====")) {
+                        mergedLines.add("==== TEXTE DE L'IP : " + ip2 + " ====");
+                    }
                     addedBlock.setLength(0); // Réinitialiser le bloc
                 }
 
@@ -72,12 +80,12 @@ public class DiffMerger {
         if (removedBlock.length() > 0) {
             mergedLines.add("======================================");
             mergedLines.add(removedBlock.toString().stripTrailing());
-            mergedLines.add("==== TEXTE DE L'IP : "+ip1+" ====");
+            mergedLines.add("==== TEXTE DE L'IP : " + ip1 + " ====");
         }
         if (addedBlock.length() > 0) {
             mergedLines.add("======================================");
             mergedLines.add(addedBlock.toString().stripTrailing());
-            mergedLines.add("==== TEXTE DE L'IP : "+ip2+" ====");
+            mergedLines.add("==== TEXTE DE L'IP : " + ip2 + " ====");
         }
 
         // Inverser la liste pour remettre dans l'ordre original
